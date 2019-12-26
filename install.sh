@@ -34,6 +34,7 @@ sudo cp -f /home/lsminer/lsminer/etc/ttyshare.service /etc/systemd/system/ttysha
 sudo cp -f /home/lsminer/lsminer/etc/screenrc /etc/screenrc
 sudo cp -f /home/lsminer/lsminer/etc/lsminer.conf /home/lsminer/lsminer.conf
 ln -s /home/lsminer/lsminer/oc/runnvoc /usr/bin/runnvoc
+ln -s /home/lsminer/lsminer/lsminer_rw /usr/bin/lsminer_rw
 apt install xinit xterm -y
 sync
 sleep 1
