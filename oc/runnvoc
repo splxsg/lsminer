@@ -1,0 +1,27 @@
+#!/bin/bash
+dir='/home/lsminer/lsminer/oc'
+smi='/usr/bin/nvidia-smi'
+set='/usr/bin/nvidia-settings'
+pciid=`lspci | sed -n -e '/3D.*NVIDIA/s/^\(..\):\(..\).\(.\).*/printf "PCI:%d:%d:%d " 0x\1 0x\2 0x\3;/p'`
+pciids=`eval ${pciid}`
+gindex=($(echo $pciids | tr " " "\n"))
+
+echo "ssssssssssssssssssssss2"
+echo $2
+function runx()
+{
+cfg=`mktemp /tmp/xorg-XXXXXXXX.conf`
+    sed -e s,@GPU_BUS_ID@,$1,    \
+        -e s,@SET_GPU_DIR@,${dir}, \
+        ${dir}/xorg.conf >> ${cfg}
+    sed -i "s/\"Coolbits\".*/\"Coolbits\" \"31\"/g" ${cfg}
+    xinit $2 --  :0 -once -config ${cfg} 
+    #rm -f ${cfg}
+}
+
+runx ${gindex[${1}]} "${set} $2"
+
+ 
+
+
+

@@ -1,0 +1,13 @@
+[Unit]
+Description=TTY Share Service
+After=lightdm.service
+
+[Service]
+User=lsminer
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/lsminer/lsminer/boot/ttyshare start
+ExecStopPost=/home/lsminer/lsminer/boot/ttyshare stop
+
+[Install]
+WantedBy=graphical.target

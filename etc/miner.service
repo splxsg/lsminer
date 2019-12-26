@@ -1,0 +1,13 @@
+[Unit]
+Description=Lsminer Miner Service
+After=lightdm.service
+
+[Service]
+User=lsminer
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/lsminer/lsminer/boot/miner start
+ExecStopPost=/home/lsminer/lsminer/boot/miner stop
+
+[Install]
+WantedBy=graphical.target

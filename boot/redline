@@ -1,0 +1,61 @@
+#!/bin/bash
+
+cd /home/lsminer/lsminer
+
+function usage()
+{
+	printf "Redline Control\n\n"
+	printf "Usage: redline [options]\n"
+	printf "start: Start Redline Service\n"
+	printf "stop: Stop Redline Service\n"
+	printf "restart: Restart Redline Service\n"
+
+}
+
+function start()
+{
+	SCREEN=$(screen -ls redline | grep redline | wc -l)
+	[ "$SCREEN" -gt 1 ] && echo "redline deamon already running..." && exit
+
+	#sudo rm -rf /home/lsminer/screen_redline.log
+
+	echo "Redline Deamon Starting..."
+	screen -dm -S redline -t redline -L bash -c "python3 /home/lsminer/lsminer/redline.py"
+}
+
+
+function stop()
+{
+	screens=`screen -ls redline | grep -E "[0-9]+\.redline" | cut -d. -f1 | awk '{print $1}'`
+
+	if [[ -z $screens ]]; then
+		echo "No redline screens found"
+	else
+		for pid in $screens; do
+			echo "Stopping screen session: $pid.redline"
+			screen -S $pid -X quit
+		done
+	fi
+
+	#sudo rm -rf /home/lsminer/screen_redline.log
+}
+
+
+case $1 in
+	start)
+		start
+	;;
+	stop)
+		stop
+	;;
+	restart)
+
+		echo "Restarting rdline deamon..."
+		stop
+		wait && sync && sleep 1
+		start
+	;;
+	*)
+		usage
+	;;
+esac

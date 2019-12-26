@@ -1,0 +1,115 @@
+#!/bin/bash
+
+cd /home/lsminer/lsminer
+
+sudo rm -rf /home/lsminer/lsminer/*.log
+
+[ -f "/etc/X11/xorg.conf" ] && rm -rf /etc/X11/xorg.conf
+
+IGPU=$(lspci | grep -E "VGA|3D controller" | head -n 1 | grep -vE "NVIDIA|AMD" | wc -l)
+
+if [ "$(lspci | grep -E "VGA|3D controller" | grep "Advanced Micro Devices" | grep -v "RS880" | wc -l)" -gt 0 ]; then
+
+	if [ "$IGPU" -gt 0 ]; then
+		if [ $(lspci -k | grep "VGA" | grep -ci "intel") -eq "1" ];then
+			IGPUDRIVER="intel"
+		elif [ $(lspci -k | grep "VGA" | grep -ci "aspeed") -eq "1" ];then
+			IGPUDRIVER="ast"
+		else
+			IGPUDRIVER="modesetting"
+		fi
+		PCI=$(lspci | grep VGA | grep -v AMD | grep -v NVIDIA | cut -d " " -f 1)
+		BUS="BusID          \"PCI:$((16#${PCI:0:2})):$((16#${PCI:4:1})):$((16#${PCI:6:1}))\""
+		#SCREEN=$(cat /etc/X11/xorg.conf | grep "Screen" | tail -1 | grep -Poi "(\d+)")
+		NEWSCREEN=$(( LAST + 1 ))
+		cat << EOF | sudo tee -a /etc/X11/xorg.conf > /dev/null
+Section "Monitor"
+	Identifier     "Monitor$NEWSCREEN"	
+	VendorName     "Unknown"
+	ModelName      "Unknown"
+	Option         "DPMS"
+EndSection
+
+Section "Device"
+	Identifier     "Device$NEWSCREEN"
+	Driver         "$IGPUDRIVER"
+	Option         "AccelMethod" "sna"
+	VendorName     "iGPU"
+	BoardName      "iGPU"
+	$BUS
+EndSection
+
+Section "Screen"
+	Identifier     "Screen$NEWSCREEN"
+	Device         "Device$NEWSCREEN"
+	Monitor        "Monitor$NEWSCREEN"
+	DefaultDepth    24
+	SubSection     "Display"
+		Depth       24
+	EndSubSection
+EndSection
+EOF
+
+	else 
+		cp /home/lsminer/lsminer/etc/xorg.conf.amd /etc/X11/xorg.conf
+	fi
+	
+	modprobe amdgpu &
+	sleep 3
+
+fi
+
+if [ "$(lspci | grep -E "VGA|3D controller" | grep "NVIDIA" | grep -v "nForce" | wc -l)" -gt 0 ]; then 
+
+    sudo modprobe nvidia_drm modeset=1 &
+    sudo modprobe nvidia &
+    sleep 2
+
+    /usr/bin/sudo /usr/bin/nvidia-xconfig --preserve-busid --allow-empty-initial-configuration --cool-bits=31 --probe-all-gpus --no-sli -a
+    if [ "$IGPU" -gt "0" ]; then
+		if [ $(lspci -k | grep "VGA" | grep -ci "intel") -eq "1" ];then
+			IGPUDRIVER="intel"
+		elif [ $(lspci -k | grep "VGA" | grep -ci "aspeed") -eq "1" ];then
+			IGPUDRIVER="ast"
+		else
+			IGPUDRIVER="modesetting"
+		fi
+		PCI=$(lspci | grep VGA | grep -v AMD | grep -v NVIDIA | cut -d " " -f 1)
+		BUS="BusID          \"PCI:$((16#${PCI:0:2})):$((16#${PCI:4:1})):$((16#${PCI:6:1}))\""
+		LAST=$(cat /etc/X11/xorg.conf | grep "Screen    " | tail -1 | tr -s ' '| cut -d ' ' -f 3)
+		NEWSCREEN=$(( LAST + 1 ))
+		sed -i "/    Screen .*${LAST}/a\    Screen      $NEWSCREEN  \"Screen0\" RightOf \"Screen$NEWSCREEN\"" /etc/X11/xorg.conf
+		sed -i "s/Screen      0  \"Screen0\"/Screen      0  \"Screen$NEWSCREEN\"/g" /etc/X11/xorg.conf
+		cat << EOF | sudo tee -a /etc/X11/xorg.conf > /dev/null
+Section "Monitor"
+	Identifier     "Monitor$NEWSCREEN"	
+	VendorName     "Unknown"
+	ModelName      "Unknown"
+	Option         "DPMS"
+EndSection
+
+Section "Device"
+	Identifier     "Device$NEWSCREEN"
+	Driver         "$IGPUDRIVER"
+	Option         "AccelMethod" "sna"
+	VendorName     "iGPU"
+	BoardName      "iGPU"
+	$BUS
+EndSection
+
+Section "Screen"
+	Identifier     "Screen$NEWSCREEN"
+	Device         "Device$NEWSCREEN"
+	Monitor        "Monitor$NEWSCREEN"
+	DefaultDepth    24
+	SubSection     "Display"
+		Depth       24
+	EndSubSection
+EndSection
+EOF
+	fi
+fi 
+
+sleep 1
+sync
+exit 0

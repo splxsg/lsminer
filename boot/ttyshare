@@ -1,0 +1,90 @@
+#!/bin/bash
+
+cd /home/lsminer/lsminer
+
+function usage()
+{
+	printf "ttyshare\n\n"
+	printf "Usage: ttyshare [OPTION]\n\n"
+	printf "start: Start ttyshare Service\n"
+	printf "stop: Stop ttyshare Service\n"
+	printf "restart: Restart ttyshare Service\n"
+
+}
+
+function start()
+{
+
+	SCREEN=$(screen -ls ttyshare | grep ttyshare | wc -l)
+	[ "$SCREEN" -gt 1 ] && echo "ttyshare service already running..." && exit
+
+	echo "ttyshare Starting..."
+
+	sudo rm -rf /home/lsminer/screen_ttyshare.log
+	sudo rm -rf /home/lsminer/ttyshare.id
+
+	screen -dm -S ttyshare -t ttyshare -L /home/lsminer/lsminer/tty-share --useTLS=false --server 116.62.135.242:7654
+
+	while true; do
+		sleep 1
+		TTYLOG=$(cat /home/lsminer/screen_ttyshare.log | grep -m1 "Web terminal: ")
+
+		if [[ ! -z $TTYLOG ]]; then
+			
+			TTYLOG=$(sed "s,$(printf '\033')\\[[0-9;]*[a-zA-Z],,g" <<< "$TTYLOG")
+			TTYSHARE_ID=$(awk '{print $NF}' <<< "$TTYLOG")
+
+			if [[ ! -z $TTYSHARE_ID ]]; then
+				echo "TTYSHARE ID generated: $TTYSHARE_ID"
+				echo $TTYSHARE_ID | tee /home/lsminer/ttyshare.id
+				wait && sync && sleep 1
+				TELEID=$(cat /home/lsminer/ttyshare.id | grep -m1 "http")
+				if [[ ! -z $TELEID ]]; then
+					echo "Write!"
+					break
+				fi
+			fi
+			
+		fi
+	done
+
+}
+
+
+function stop()
+{
+	screens=`screen -ls ttyshare | grep -E "[0-9]+\.ttyshare" | cut -d. -f1 | awk '{print $1}'`
+
+	if [[ -z $screens ]]; then
+		echo "No ttyshare screens found"
+	else
+		for pid in $screens; do
+			echo "Stopping screen session: $pid.ttyshare"
+			screen -S $pid -X quit
+		done
+	fi
+
+	sudo rm -rf /home/lsminer/screen_ttyshare.log
+	sudo rm -rf /home/lsminer/ttyshare.id
+}
+
+
+
+case $1 in
+	start)
+		start
+	;;
+	stop)
+		stop
+	;;
+	restart)
+
+		echo "Restarting ttyshare"
+		stop
+		wait && sync && sleep 1
+		start
+	;;
+	*)
+		usage
+	;;
+esac

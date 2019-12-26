@@ -1,0 +1,12 @@
+[Unit]
+Description=Lsminer Prepare Service For Driver
+Before=lightdm.service
+
+[Service]
+User=root
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/lsminer/lsminer/boot/driver &
+
+[Install]
+WantedBy=sysinit.target

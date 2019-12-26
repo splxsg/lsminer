@@ -1,0 +1,7 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=miner
+Comment=Miner Screen
+Exec=xfce4-terminal --maximize -e 'sh -c "while true; do screen -x lsminer; sleep 1; done"' --title="Miner Screen" --hide-menubar
+Hidden=false

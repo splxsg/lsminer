@@ -1,0 +1,169 @@
+#!/bin/bash
+
+#GPU_COUNT_AMD=$(lspci | grep -E "VGA|3D controller" | grep AMD | wc -l)
+#GPU_COUNT_NV=$(lspci | grep -E "VGA|3D controller" | grep NVIDIA | wc -l)
+
+[ "$GPU_COUNT_AMD" -eq 0 ] && [ "$GPU_COUNT_NV" -eq 0 ] && exit 1
+
+export GPU_FORCE_64BIT_PTR=0
+export GPU_MAX_HEAP_SIZE=100
+export GPU_USE_SYNC_OBJECTS=1
+export GPU_MAX_ALLOC_PERCENT=100
+export GPU_SINGLE_ALLOC_PERCENT=100
+export DISPLAY=:0
+export XAUTHORITY=/var/run/lightdm/root/:0
+
+if [ "$GPU_COUNT_AMD" -gt 0 ]; then
+
+    [ -z "$POWER" ] && POWER=5
+    IFS=',' read -r -a Cores <<< "$AMD_CORE"
+    IFS=',' read -r -a Mems <<< "$AMD_MEMORY"
+    IFS=',' read -r -a Pows <<< "$AMD_POWER"
+    IFS=',' read -r -a Temps <<< "$AMD_TEMP"
+    IFS=',' read -r -a Fans <<< "$AMD_FAN"
+
+    # Fix values
+    [ -n "$Cores" ] &&
+    for (( x=${#Cores[@]}; x < $GPU_COUNT_AMD; ++x )); do
+      Cores[$x]=${Cores[$x-1]}
+    done
+    [ -n "$Mems" ] &&
+    for (( x=${#Mems[@]}; x < $GPU_COUNT_AMD; ++x )); do
+      Mems[$x]=${Mems[$x-1]}
+    done
+    [ -n "$Pows" ] &&
+    for (( x=${#Pows[@]}; x < $GPU_COUNT_AMD; ++x )); do
+      Pows[$x]=${Pows[$x-1]}
+    done
+    [ -n "$Temps" ] &&
+    for (( x=${#Temps[@]}; x < $GPU_COUNT_AMD; ++x )); do
+      Temps[$x]=${Temps[$x-1]}
+    done
+    [ -n "$Fans" ] &&
+    for (( x=${#Fans[@]}; x < $GPU_COUNT_AMD; ++x )); do
+      Fans[$x]=${Fans[$x-1]}
+    done
+
+    # Overclock Loop
+    i=0
+    for ID in $(ls -d1 /sys/class/drm/card*/device/pp_table | sort -V | grep -Poi "(\d+)" | xargs); do
+
+      parameters=''
+      sudo cp /run/lsminer/amd_tables/card$ID/pp_table /sys/class/drm/card$ID/device/pp_table && sleep 0.2 && sync
+      
+      MAX_MEMSTATE=$(/home/lsminer/lsminer/ohgodatool -i $ID --show-mem | grep -o -P "Memory state [0-9]" | grep -o "[[:digit:]]" | tail -n 1)
+      MAX_CORESTATE=$(/home/lsminer/lsminer/ohgodatool -i $ID --show-core | grep -o -P "DPM state [0-9]" | grep -o "[[:digit:]]" | tail -n 1)
+      MAX_VOLTSTATE=$(/home/lsminer/lsminer/ohgodatool -i $ID --show-voltage | grep -o -P "Voltage state [0-9]*" | grep -o "[[:digit:]]*" | tail -n 1)
+
+      if [ -n "$ALLSTATES" ] && [ "$ALLSTATES" == "on" ]; then
+
+          [ -n "${Cores[$i]}" ] && [ "${Cores[$i]}" -ge "300" ] && [ "${Cores[$i]}" -le "1600" ] &&
+              if [ -n "$MAX_VOLTSTATE" ]; then
+                  for ((STATE=1; STATE<=$MAX_CORESTATE; STATE++)); do
+                      sudo /home/lsminer/lsminer/ohgodatool -i $ID --core-state $STATE --core-clock ${Cores[$i]} && sleep 0.1
+                  done
+              else
+                  sudo /home/lsminer/lsminer/ohgodatool -i $ID --core-state $POWER --core-clock ${Cores[$i]} && sleep 0.1
+              fi
+
+          [ -n "${Mems[$i]}" ] && [ "${Mems[$i]}" -ge "300" ] && [ "${Mems[$i]}" -le "2500" ] && 
+              sudo /home/lsminer/lsminer/ohgodatool -i $ID --mem-state $MAX_MEMSTATE --mem-clock ${Mems[$i]} && sleep 0.1
+
+          [ -n "$VOLT" ] && [ "$VOLT" -ge "700" ] && [ "$VOLT" -le "1200" ] &&
+              if [ -n "$MAX_VOLTSTATE" ]; then
+                  for ((STATE=1; STATE<=$MAX_VOLTSTATE; STATE++)); do
+                      sudo /home/lsminer/lsminer/ohgodatool -i $ID --volt-state $STATE --vddc-table-set $VOLT && sleep 0.1
+                  done
+              else
+                  sudo /home/lsminer/lsminer/ohgodatool -i $ID --volt-state $POWER --vddc-table-set $VOLT && sleep 0.1
+              fi      
+
+      else
+
+          [ -n "${Cores[$i]}" ] && [ "${Cores[$i]}" -ge "300" ] && [ "${Cores[$i]}" -le "1600" ] && parameters+=" --core-state $POWER --core-clock ${Cores[$i]}"
+          [ -n "${Mems[$i]}" ] && [ "${Mems[$i]}" -ge "300" ] && [ "${Mems[$i]}" -le "2500" ] && parameters+=" --mem-state $MAX_MEMSTATE --mem-clock ${Mems[$i]}"
+          [ -n "$VOLT" ] && [ "$VOLT" -ge "700" ] && [ "$VOLT" -le "1200" ] && parameters+=" --volt-state $POWER --vddc-table-set $VOLT"
+
+          [ -n "$parameters" ] && sudo /home/lsminer/lsminer/ohgodatool -i $ID $parameters && sleep 0.1
+      fi
+
+      echo "manual" > /sys/class/drm/card$ID/device/power_dpm_force_performance_level
+      [ -n "$POWER" ] && sudo echo $POWER > /sys/class/drm/card$ID/device/pp_dpm_sclk
+      [ -n "$MAX_MEMSTATE" ] && [ "$MAX_MEMSTATE" -gt 0 ] && sudo echo $MAX_MEMSTATE > /sys/class/drm/card$ID/device/pp_dpm_mclk
+
+      wait && sleep 0.5
+
+      i=$[i + 1]
+
+    done
+
+fi
+
+
+if [ "$GPU_COUNT_NV" -gt 0 ]; then
+
+    IFS=',' read -r -a Cores <<< "$NV_CORE"
+    IFS=',' read -r -a Mems <<< "$NV_MEMORY"
+    IFS=',' read -r -a Pows <<< "$NV_POWER"
+    IFS=',' read -r -a Temps <<< "$NV_TEMP"
+    IFS=',' read -r -a Fans <<< "$NV_FAN"
+
+    # Fix values
+    [ -n "$Cores" ] &&
+    for (( x=${#Cores[@]}; x < $GPU_COUNT_NV; ++x )); do
+        Cores[$x]=${Cores[$x-1]}
+    done
+    [ -n "$Mems" ] &&
+    for (( x=${#Mems[@]}; x < $GPU_COUNT_NV; ++x )); do
+        Mems[$x]=${Mems[$x-1]}
+    done
+    [ -n "$Pows" ] &&
+    for (( x=${#Pows[@]}; x < $GPU_COUNT_NV; ++x )); do
+        Pows[$x]=${Pows[$x-1]}
+    done
+    [ -n "$Temps" ] &&
+    for (( x=${#Temps[@]}; x < $GPU_COUNT_NV; ++x )); do
+        Temps[$x]=${Temps[$x-1]}
+    done
+    [ -n "$Fans" ] &&
+    for (( x=${#Fans[@]}; x < $GPU_COUNT_NV; ++x )); do
+        Fans[$x]=${Fans[$x-1]}
+    done
+
+    sudo nvidia-smi -pm 1
+
+    # Overclock Loop
+    for (( i=0; i<$GPU_COUNT_NV; ++i )); do
+
+        parameters=''
+        parameters+="-a [gpu:0]/GPUPowerMizerMode=1"
+
+        GPU=$(sudo nvidia-smi -i 0 --query-gpu=gpu_name --format=csv,noheader)
+        TYPE=3
+        if [[ $GPU =~ "1050" ]]; then TYPE=2
+        elif [[ $GPU =~ "P106-100" ]]; then TYPE=2
+        elif [[ $GPU =~ "P106-090" ]]; then TYPE=1
+        elif [[ $GPU =~ "P104-100" ]]; then TYPE=1
+        elif [[ $GPU =~ "P102-100" ]]; then TYPE=1
+        fi
+
+        [ -n "${Pows[0]}" ] && sudo nvidia-smi -i 0 -pl ${Pows[0]} &
+        [ -n "${Cores[0]}" ] && parameters+=" -a [gpu:0]/GPUGraphicsClockOffset[$TYPE]=${Cores[0]}"
+        [ -n "${Mems[0]}" ] && parameters+=" -a [gpu:0]/GPUMemoryTransferRateOffset[$TYPE]=${Mems[0]}"
+        [ -n "${Fans[0]}" ] && parameters+=" -a [gpu:0]/GPUFanControlState=1 -a [fan:0]/GPUTargetFanSpeed=${Fans[0]}"
+        #echo "gggggaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaagggggggggggggggggggg"
+        #echo ${parameters}
+        sudo runnvoc $i "${parameters}" &
+        wait && wait && sleep 1
+
+    done
+
+    wait && wait && sleep 3
+
+fi
+
+sync
+
+#sudo systemctl restart miner.service
+
+exit 0

@@ -1,0 +1,77 @@
+#!/bin/bash
+cd /home/lsminer/lsminer
+
+function text()
+{
+	local color=${1}
+	shift
+	local text="${@}"
+	case ${color} in
+    	red    ) tput setaf 1 ; tput bold ;;
+    	green  ) tput setaf 2 ; tput bold ;;
+    	yellow ) tput setaf 3 ; tput bold ;;
+    	blue   ) tput setaf 4 ; tput bold ;;
+    	purple ) tput setaf 5 ; tput bold ;;
+		cyan   ) tput setaf 6 ; tput bold ;;
+		white  ) tput setaf 7 ; tput bold ;;
+	esac
+	echo -en "${text}"
+	tput sgr0
+}
+
+function intro()
+{
+	LOGO=$(cat /home/lsminer/lsminer/logo)
+	DARKGRAY='\033[1;30m'
+	RESETCOLOR='\033[0m'
+
+	echo -e "${DARKGRAY}------------------------------------------------------------------------------${RESETCOLOR}\n\n"
+
+	text cyan "$LOGO\n"
+	text cyan "		     Linux Mining Operating System\n\n\n"
+
+	echo -e "${DARKGRAY}------------------------------------------------------------------------------${RESETCOLOR}\n\n"
+}
+
+#buckup amd tables
+[ -d "/run/lsminer/amd_tables" ] && sudo rm -rf /run/lsminer/amd_tables
+
+#sudo mkdir /run/lsminer
+if [ "$(lspci | grep -E "VGA|3D controller" | grep AMD | wc -l)" -gt 0 ]; then	
+
+	sudo mkdir /run/lsminer/amd_tables
+
+	CARDS=$(sudo ls -d1 /sys/class/drm/card*/device/pp_table | sort -V | grep -Poi "(\d+)" | xargs)
+	for ID in $CARDS; do
+		sudo mkdir /run/lsminer/amd_tables/card$ID
+		sudo cp /sys/class/drm/card$ID/device/pp_table /run/lsminer/amd_tables/card$ID/pp_table
+		sleep 0.2 && sync
+	done 
+
+fi
+
+
+#检查accesskey文件是否正常，如果为空，用户必须手动输入accesskey
+ACCESSKEY=$(cat /home/lsminer/lsminer.conf | cut -d ' ' -f 1 | tr '[:upper:]' '[:lower:]' | tr -d '\r' | tr -d '\n')
+
+if [ -z "$ACCESSKEY" ]; then
+	/home/lsminer/lsminer/changekey > /dev/null 2>&1
+fi
+
+intro
+
+text cyan "The miner is starting\n\n"
+
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
+export DISPLAY=:0
+export GPU_MAX_ALLOC_PERCENT=100
+export GPU_MAX_HEAP_SIZE=100
+export GPU_SINGLE_ALLOC_PERCENT=100
+export GPU_USE_SYNC_OBJECTS=1
+#export GPU_FORCE_64BIT_PTR=1 # CAUTION !!
+export LD_LIBRARY_PATH=/home/lsminer/lsminer/libcuda
+
+wait && sync && sleep 1
+
+sudo python3 /home/lsminer/lsminer/update.py
+
