@@ -147,10 +147,10 @@ if [ "$GPU_COUNT_NV" -gt 0 ]; then
         elif [[ $GPU =~ "P102-100" ]]; then TYPE=1
         fi
 
-        [ -n "${Pows[0]}" ] && sudo nvidia-smi -i 0 -pl ${Pows[0]} &
-        [ -n "${Cores[0]}" ] && parameters+=" -a [gpu:0]/GPUGraphicsClockOffset[$TYPE]=${Cores[0]}"
-        [ -n "${Mems[0]}" ] && parameters+=" -a [gpu:0]/GPUMemoryTransferRateOffset[$TYPE]=${Mems[0]}"
-        [ -n "${Fans[0]}" ] && parameters+=" -a [gpu:0]/GPUFanControlState=1 -a [fan:0]/GPUTargetFanSpeed=${Fans[0]}"
+        [ -n "${Pows[$i]}" ] && sudo nvidia-smi -i 0 -pl ${Pows[$i]} &
+        [ -n "${Cores[$i]}" ] && parameters+=" -a [gpu:0]/GPUGraphicsClockOffset[$TYPE]=${Cores[$i]}"
+        [ -n "${Mems[$i]}" ] && parameters+=" -a [gpu:0]/GPUMemoryTransferRateOffset[$TYPE]=${Mems[$i]}"
+        [ -n "${Fans[$i]}" ] && parameters+=" -a [gpu:0]/GPUFanControlState=1 -a [fan:0]/GPUTargetFanSpeed=${Fans[$i]}"
         #echo "gggggaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaagggggggggggggggggggg"
         #echo ${parameters}
         sudo runnvoc $i "${parameters}" &
