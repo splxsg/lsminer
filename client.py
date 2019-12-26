@@ -717,7 +717,7 @@ class lsminerClient(object):
                         logging.warning(buffer)
                     buffer = ''
             except Exception as e:
-                logging.info('$$$$$$$$$$$$$$$recvThread exception. msg: ' + str(e))
+                logging.info('recvThread exception. msg: ' + str(e))
                 logging.exception(e)
                 time.sleep(1)
 
