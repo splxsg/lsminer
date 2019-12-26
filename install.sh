@@ -33,6 +33,7 @@ sudo cp -f /home/lsminer/lsminer/etc/redline.service /etc/systemd/system/redline
 sudo cp -f /home/lsminer/lsminer/etc/ttyshare.service /etc/systemd/system/ttyshare.service
 sudo cp -f /home/lsminer/lsminer/etc/screenrc /etc/screenrc
 sudo cp -f /home/lsminer/lsminer/etc/lsminer.conf /home/lsminer/lsminer.conf
+ln -s /home/lsminer/lsminer/oc/runnvoc /usr/bin/runnvoc
 sync
 sleep 1
 
