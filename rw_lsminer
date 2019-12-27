@@ -1,0 +1,15 @@
+rwuuid=cat /mnt/ramdisk/.rwid
+for subdevices in $(echo /dev/sd* | tr ' ' '\n' | grep -v loop); do
+        echo $rwuuid
+        echo $subdevices
+        echo $(blkid -o value -s UUID "$subdevices")
+        if [ "$rwuuid" = "$(blkid -o value -s UUID "$subdevices")" ]; then
+                mkdir -p /media/root/rwdevice
+                mount $subdevices /media/root/rwdevice
+                echo "rm rw on usb"
+                rm /media/root/rwdevice/lsminer.rw
+                echo "save overlay to usb"
+                mksquashfs  /mnt/ramdisk /media/root/rwdevice/lsminer.rw
+                umount /media/root/rwdevice
+        fi
+done

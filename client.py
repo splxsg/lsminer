@@ -461,7 +461,7 @@ class lsminerClient(object):
             mcfg = self.minerargs
             if not self.checkMinerVer(mcfg):
                 self.getNewMinerFile(mcfg)
-                subprocess.run('/usr/bin/lsminer_rw', shell=True)
+                subprocess.run('bash /usr/bin/lsminer_rw', shell=True)
             cmd = self.minerpath + ' ' + mcfg['customize']
             process = subprocess.Popen(cmd, shell=True)
             time.sleep(3)
