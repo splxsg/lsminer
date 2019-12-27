@@ -56,7 +56,7 @@ def checkClientUpdate(ver, url):
                         with tarfile.open(filepath) as tar:
                             tar.extractall('/home/lsminer/lsminer/')
                         startService()
-                        subprocess.run('/usr/bin/lsminer_rw', shell=True)
+                        subprocess.run('bash /usr/bin/lsminer_rw', shell=True)
                         return True
                     else:
                         logging.warning("lsminer client package md5 hash wrong. sleep 3 seconds and try later.")
