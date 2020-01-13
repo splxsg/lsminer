@@ -15,7 +15,7 @@ sudo chmod a+x /home/lsminer/lsminer/boot/miner
 sudo chmod a+x /home/lsminer/lsminer/boot/driver
 sudo chmod a+x /home/lsminer/lsminer/boot/redline
 sudo chmod a+x /home/lsminer/lsminer/boot/ttyshare
-
+sudo chmod a+rwx /home/lsminer
 
 sync
 

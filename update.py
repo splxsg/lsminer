@@ -35,6 +35,7 @@ def startService():
 def checkClientUpdate(ver, url):
     ''' return true = client has been updated or false = client has not been updated.'''
     try:
+        logging.info("in checkclientupdate")
         body = {}
         body['version'] = ver
         logging.info('update.py current version: ' + str(body))
@@ -73,9 +74,10 @@ def checkClientUpdate(ver, url):
 
 if __name__ == '__main__':
     try:
+        logging.info("in update.py")
         updateurl = 'http://lsminer.yunjisuan001.com:23335/appupdate_linux'
         appver = getClientVersion()
-        
+        logging.info("gotversion")
         while True:
             if checkClientUpdate(appver, updateurl):
                 logging.info('client has been updated. lsminer client will restart later.')

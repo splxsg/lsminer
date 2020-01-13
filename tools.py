@@ -7,7 +7,7 @@ import os
 import hashlib
 import gpumon
 import logging
-
+import urllib.request
 logging.basicConfig(level = logging.INFO, format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt = '%Y-%m-%d  %H:%M:%S %a')
 
 defaultConfig = {
@@ -162,6 +162,7 @@ def getVedioCard():
     
 def downloadFile(url, path):
     '''从url下载文件保存到path路径，path包含文件名'''
+    '''
     try:
         req = request.Request(url)
         with request.urlopen(req) as f:
@@ -173,6 +174,33 @@ def downloadFile(url, path):
         logging.error("function downloadFile exception. msg: " + str(e))
         logging.exception(e)
     return 0
+    '''
+    try:
+        u = urllib.request.urlopen(url)  
+        f = open(path, 'wb')
+        
+        #meta = u.info()  
+        #file_size = int(meta.getheader("Content-Length")[0])
+        file_size = int(u.getheader("Content-Length"))
+        print('file_size: %d' % file_size)
+
+        file_size_dl = 0  
+        block_sz = 8192  
+        while True:  
+          buffer = u.read(block_sz)  
+          if not buffer:  
+            break  
+
+          file_size_dl += len(buffer)  
+          f.write(buffer)  
+        f.close()
+        return 1
+
+    except Exception as e:
+        logging.error("function downloadFile exception. msg: " + str(e))
+        logging.exception(e)
+    return 0
 
 if __name__ == '__main__':
+    #downloadFile('http://lsminer.oss-cn-shanghai.aliyuncs.com/app/lsminer_132.tar.xz', '/home/lsminer/lsminer_132.tar.xz')
     pass

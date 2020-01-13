@@ -138,7 +138,7 @@ if [ "$GPU_COUNT_NV" -gt 0 ]; then
         parameters=''
         parameters+="-a [gpu:0]/GPUPowerMizerMode=1"
 
-        GPU=$(sudo nvidia-smi -i 0 --query-gpu=gpu_name --format=csv,noheader)
+        GPU=$(sudo nvidia-smi -i ${i} --query-gpu=gpu_name --format=csv,noheader)
         TYPE=3
         if [[ $GPU =~ "1050" ]]; then TYPE=2
         elif [[ $GPU =~ "P106-100" ]]; then TYPE=2
@@ -147,7 +147,7 @@ if [ "$GPU_COUNT_NV" -gt 0 ]; then
         elif [[ $GPU =~ "P102-100" ]]; then TYPE=1
         fi
 
-        [ -n "${Pows[$i]}" ] && sudo nvidia-smi -i 0 -pl ${Pows[$i]} &
+        [ -n "${Pows[$i]}" ] && sudo nvidia-smi -i ${i} -pl ${Pows[$i]} &
         [ -n "${Cores[$i]}" ] && parameters+=" -a [gpu:0]/GPUGraphicsClockOffset[$TYPE]=${Cores[$i]}"
         [ -n "${Mems[$i]}" ] && parameters+=" -a [gpu:0]/GPUMemoryTransferRateOffset[$TYPE]=${Mems[$i]}"
         [ -n "${Fans[$i]}" ] && parameters+=" -a [gpu:0]/GPUFanControlState=1 -a [fan:0]/GPUTargetFanSpeed=${Fans[$i]}"

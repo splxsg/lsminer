@@ -39,7 +39,7 @@ function intro()
 #sudo mkdir /run/lsminer
 if [ "$(lspci | grep -E "VGA|3D controller" | grep AMD | wc -l)" -gt 0 ]; then	
 
-	sudo mkdir /run/lsminer/amd_tables
+	sudo mkdir -p /run/lsminer/amd_tables
 
 	CARDS=$(sudo ls -d1 /sys/class/drm/card*/device/pp_table | sort -V | grep -Poi "(\d+)" | xargs)
 	for ID in $CARDS; do
@@ -50,6 +50,13 @@ if [ "$(lspci | grep -E "VGA|3D controller" | grep AMD | wc -l)" -gt 0 ]; then
 
 fi
 
+if [ -f /opt/amdmeminfo.txt ];then
+	echo "amdmeminfo.txt exist"
+else
+	GETHARDWARE=$(sudo /home/lsminer/lsminer/boot/amdmeminfo) && wait
+	echo $GETHARDWARE | tee /opt/amdmeminfo.txt
+	wait && sync && sleep 1
+fi
 
 #检查accesskey文件是否正常，如果为空，用户必须手动输入accesskey
 ACCESSKEY=$(cat /home/lsminer/lsminer.conf | cut -d ' ' -f 1 | tr '[:upper:]' '[:lower:]' | tr -d '\r' | tr -d '\n')
@@ -74,4 +81,5 @@ export LD_LIBRARY_PATH=/home/lsminer/lsminer/libcuda
 wait && sync && sleep 1
 
 sudo python3 /home/lsminer/lsminer/update.py
+
 

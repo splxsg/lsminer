@@ -1,5 +1,6 @@
 import os
 import platform
+import subprocess
 from cffi import FFI
 
 ffi = FFI()
@@ -42,8 +43,11 @@ ffi.cdef('''
 
 if platform.system() == 'Linux':
     lib = ffi.dlopen('./gpumon/libgpumon.so')
+    print("lib.wrap_nvml_create")
     nvHandle = lib.wrap_nvml_create()
+    print("lib.wrap_adl_create")
     amdHandle = lib.wrap_adl_create()
+    print("lib.wrap_amdsysfs_create")
     fsHandle = lib.wrap_amdsysfs_create()
 else:
     nvHandle = None
@@ -213,13 +217,18 @@ def fsGetGpuName():
 
 def getBoardName():
     boardname = []
-    with os.popen('/opt/amdgpu-pro/bin/clinfo') as p:
-        pci = p.read().splitlines(False)
-        for l in pci:
-            if 'Board name:' in l:
-                name = l.split(':')[1].strip()
-                print(name)
-                boardname.append(name)
+    #with os.popen('/opt/amdgpu-pro/bin/clinfo') as p:
+    #    pci = p.read().splitlines(False)
+    cmd = ['timeout', '10', '/opt/amdgpu-pro/bin/clinfo']
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    outs = p.communicate(timeout=10)[0]
+    #print(outs)
+    pci = outs.splitlines(False)
+    for l in pci:
+        if 'Board name:' in l.decode():
+            name = l.decode().split(':')[1].strip()
+            print(name)
+            boardname.append(name)
     return boardname
 
 def fsGetGpuInfo():

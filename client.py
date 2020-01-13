@@ -36,6 +36,7 @@ class lsminerClient(object):
         self.rthread = None
         self.gthread = None
         self.gcthread = None
+        self.minerstatus = 0
         self.startime = datetime.now()
         self.minertime = datetime.now()
         self.consoleurl = ''
@@ -122,7 +123,8 @@ class lsminerClient(object):
             logging.error('connectSrv exception. msg: ' + str(e))
             logging.exception(e)
             time.sleep(3)
-            q.put(1)
+            self.sock = None
+            #q.put(1)
             
     def GenerateAMDdeviceID(self, gpuinfo):
         gpustatus = ""
@@ -193,8 +195,11 @@ class lsminerClient(object):
                 cnt = nvmlGetGpuCount()
                 name = nvmlGetGpuName()
             else:
+                logging.info("here")
                 cnt = fsGetGpuCount()
+                logging.info("here "+str(cnt))
                 name = self.GenerateAMDdeviceID(fsGetGpuInfo())#fsGetGpuName()
+                logging.info("name "+str(name))
             logging.info('GGGGGGGGGGGGGGGGGGGGGGGGG'+name)
             reqData = {}
             reqData['method'] = 1
@@ -228,7 +233,7 @@ class lsminerClient(object):
             logging.exception(e)
             time.sleep(1)
             if not self.checkServerConnection():
-                subprocess.run('sudo systemctl restart miner', shell=True)
+                #subprocess.run('sudo systemctl restart miner', shell=True)
                 self.sock = None
             return None         
 
@@ -247,7 +252,7 @@ class lsminerClient(object):
             logging.exception(e)
             time.sleep(1)
             if not self.checkServerConnection():
-                subprocess.run('sudo systemctl restart miner', shell=True)
+                #subprocess.run('sudo systemctl restart miner', shell=True)
                 self.sock = None
             return None
 
@@ -282,16 +287,17 @@ class lsminerClient(object):
             logging.exception(e)
             time.sleep(1)
             if not self.checkServerConnection():
-                subprocess.run('sudo systemctl restart miner', shell=True)
+                #subprocess.run('sudo systemctl restart miner', shell=True)
                 self.sock = None
             return None
 
     def onWelcome(self, msg):
         logging.info('recv server connecting msg: ' + str(msg))
         logging.info('connect server ok.')
+        q.put(2)
         thread = threading.Thread(target=lsminerClient.ttyshareProc, args=(self,))
         thread.start()
-        q.put(2)
+        logging.info('after ttyshareproc')
         self.dog = 0
 
     def onLoginResp(self, msg):
@@ -313,7 +319,7 @@ class lsminerClient(object):
             reqData['method'] = 3
             reqData['minerver'] = mcfg['minerver']
             reqData['uptime'] = self.getMinerUptimeMinutes()
-            reqData['minerstatus'] = 1
+            reqData['minerstatus'] = self.minerstatus
             gpuinfo = self.gpuinfo#getGpuInfo()
             print(gpuinfo)
             gpuclock = self.gpuclock#getGpuClock()
@@ -374,7 +380,7 @@ class lsminerClient(object):
 
     def reportThread(self):
         while True:
-            try:
+            try:                
                 time.sleep(float(self.cfg['reportime']))
                 if self.dog > 1:
                     logging.error("=========dog server connection exception. restart miner=============")
@@ -384,6 +390,10 @@ class lsminerClient(object):
                 if not self.checkTTYServerConnection():
                     thread = threading.Thread(target=lsminerClient.ttyshareProc, args=(self,))
                     thread.start()
+                if self.sock == None:
+                    logging.info('reportThread client socket == None. sleep 1 second.')
+                    time.sleep(1)
+                    continue
                 #mcfg = self.minerargs
                 logging.info("before getReportData")
                 reqData = self.getReportData(self.minerargs)
@@ -401,15 +411,17 @@ class lsminerClient(object):
                     logging.warning('socket unusable.')
                     time.sleep(1)
                     if not self.checkServerConnection():
-                        subprocess.run('sudo systemctl restart miner', shell=True)
-                        q.put(1)
+                        #subprocess.run('sudo systemctl restart miner', shell=True)
+                        #q.put(1)
+                        self.sock = None
             except Exception as e:
                 logging.error("function reportThread exception. msg: " + str(e))
                 logging.exception(e)
                 time.sleep(1)
                 if not self.checkServerConnection():
-                    subprocess.run('sudo systemctl restart miner', shell=True)
-                    q.put(1)
+                    #subprocess.run('sudo systemctl restart miner', shell=True)
+                    #q.put(1)
+                    self.sock = None
 
     def getNewMinerFile(self, mcfg):
         try:
@@ -443,7 +455,9 @@ class lsminerClient(object):
 
     def killAllMiners(self, path):
         try:
+            #cmd = 'ps -aux | grep -v grep | grep ' + path
             cmd = 'ps -x | grep ' + path
+            logging.info("kill all "+cmd)
             with os.popen(cmd) as p:
                 lines = p.read().splitlines(False)
                 for l in lines:
@@ -456,6 +470,18 @@ class lsminerClient(object):
             logging.error("function killAllMiners exception. msg: " + str(e))
             logging.exception(e)
 
+    def getMinerProcessCounts(self, minerName):
+        try:
+            cmd = 'ps -aux | grep -v grep | grep ' + minerName
+            #logging.info("BBBBBBBBB: " + cmd)
+            with os.popen(cmd) as p:
+                lines = p.read().splitlines(False)
+                return len(lines)
+        except Exception as e:
+                logging.error("function getMinerProcessCounts exception. msg: " + str(e))
+                logging.exception(e)
+                return 0
+
     def minerThreadProc(self):
         try:
             mcfg = self.minerargs
@@ -463,11 +489,23 @@ class lsminerClient(object):
                 self.getNewMinerFile(mcfg)
                 subprocess.run('bash /usr/bin/lsminer_rw', shell=True)
             cmd = self.minerpath + ' ' + mcfg['customize']
+            #logging.info("MMMMMMMMMM: "+cmd)
             process = subprocess.Popen(cmd, shell=True)
             time.sleep(3)
+            self.minerstatus = 1
             process.terminate()
             #update miner time
             self.minertime = datetime.now()
+            while True:
+                minerProcount = self.getMinerProcessCounts(self.minerpath[1:])
+                logging.info("miner count: "+str(minerProcount))
+                if minerProcount == 0:
+                    self.minerstatus = 0
+                    logging.info('miner terminated. client will be getMinerargs and restart.')
+                    q.put(3)
+                    break
+                else:
+                    time.sleep(3)
         except Exception as e:
             logging.error("function minerThread exception. msg: " + str(e))
             logging.exception(e)
@@ -621,16 +659,16 @@ class lsminerClient(object):
             os.putenv('NV_TEMP', temps)
             os.putenv('NV_FAN', fans)
         else:
-            pass
-            #os.putenv('GPU_COUNT_AMD', str(self.amdcount))
-            #os.putenv('AMD_CORE', cores)
-            #os.putenv('AMD_MEMORY', mems)
-            #os.putenv('AMD_POWER', pows)
-            #os.putenv('AMD_TEMP', temps)
-            #os.putenv('AMD_FAN', fans)
+            #pass
+            os.putenv('GPU_COUNT_AMD', str(self.amdcount))
+            os.putenv('AMD_CORE', cores)
+            os.putenv('AMD_MEMORY', mems)
+            os.putenv('AMD_POWER', pows)
+            os.putenv('AMD_TEMP', temps)
+            os.putenv('AMD_FAN', fans)
         
         #overclock get over clocl args by environment variables
-        #os.system('/home/lsminer/lsminer/overclock')
+        os.system('/home/lsminer/lsminer/overclock')
         
         with os.popen('/home/lsminer/lsminer/overclock') as p:
             netlines = p.read().splitlines(False)
@@ -695,6 +733,8 @@ class lsminerClient(object):
                 if self.sock == None:
                     logging.info('client socket == None. sleep 1 second.')
                     time.sleep(1)
+                    if not self.checkServerConnection():
+                        self.connectSrv()
                     continue
 
                 data = self.sock.recv(4096)
@@ -702,9 +742,9 @@ class lsminerClient(object):
                     logging.warning('server close socket. try to reconnect.')
                     time.sleep(1)
                     if not self.checkServerConnection():
-                        subprocess.run('sudo systemctl restart miner', shell=True)
+                        #subprocess.run('sudo systemctl restart miner', shell=True)
+                        #q.put(1)
                         self.sock = None
-                        q.put(1)
                     continue
 
                 buffer += data.decode()
@@ -723,11 +763,13 @@ class lsminerClient(object):
                 time.sleep(1)
 
                 #if not self.checkServerConnection():
-                subprocess.run('sudo systemctl restart miner', shell=True)
+                #subprocess.run('sudo systemctl restart miner', shell=True)
+                #q.put(1)
                 self.sock = None
 
     '''cmd list: 1 == connect server, 2 == login server, 3 == get miner config'''
     def processCmd(self, cmd):
+        
         if cmd == 1:
             self.connectSrv()
         elif cmd == 2:
@@ -754,6 +796,7 @@ class lsminerClient(object):
             self.ttyservicestarting = 1
             while True:
                 try:
+                    logging.info("abc")
                     if not os.path.exists(filepath):
                         logging.warning('can not find ttyshare.id file. sleep 10 seconds and try again.')
                         time.sleep(10)
@@ -763,6 +806,7 @@ class lsminerClient(object):
                         self.consoleurl = fs.readline().replace("\n","")
                         logging.info("ttyshareurl: " + str(self.consoleurl))
                     q.put(14)
+                    logging.info("bnnnnn")
                     break
                 except Exception as e:
                     logging.info('ttyshareProc exception. msg: ' + str(e))
@@ -776,7 +820,7 @@ class lsminerClient(object):
         thread.start()
 
     def run(self):
-        q.put(1)
+        #q.put(1)
         while True:
             try:
                 cmd = q.get()

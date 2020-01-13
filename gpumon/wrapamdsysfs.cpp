@@ -26,7 +26,7 @@
 
 #include "wrapamdsysfs.h"
 #include "wraphelper.h"
-
+int getMemMaker(wrap_amdsysfs_handle* sysfsh);
 static bool getFileContentValue(const char* filename, unsigned int& value)
 {
     value = 0;
@@ -214,7 +214,7 @@ wrap_amdsysfs_handle* wrap_amdsysfs_create()
     sysfsh->sysfs_pci_vid = (unsigned int*)calloc(gpucount, sizeof(unsigned int));
     sysfsh->sysfs_pci_pid = (unsigned int*)calloc(gpucount, sizeof(unsigned int));
     sysfsh->sysfs_pci_subsysid = (unsigned int*)calloc(gpucount, sizeof(unsigned int));
-
+	sysfsh->memMaker = (char(*)[32])calloc(gpucount, gpucount * 32);
     gpucount = 0;
     for (auto const& device : devices)
     {
@@ -227,10 +227,11 @@ wrap_amdsysfs_handle* wrap_amdsysfs_create()
         sysfsh->sysfs_pci_vid[gpucount] = device.vid;
         sysfsh->sysfs_pci_pid[gpucount] = device.pid;
         sysfsh->sysfs_pci_subsysid[gpucount] = device.subsysid;
-
+		strcpy(sysfsh->memMaker[gpucount], "");
         gpucount++;
     }
-
+	wrap_amdsysfs_get_mem_maker(sysfsh);
+	//getMemMaker(sysfsh);
 #endif
 
     return sysfsh;
@@ -382,7 +383,7 @@ int wrap_amdsysfs_get_clock(wrap_amdsysfs_handle* sysfsh, int index, unsigned in
         int gpuindex = sysfsh->sysfs_device_id[index];
 
         char dbuf[120];
-        snprintf(dbuf, 120, "/sys/kernel/debug/dri/%d/amdgpu_pm_info", gpuindex);
+		snprintf(dbuf, 120, "/sys/kernel/debug/dri/%d/amdgpu_pm_info", gpuindex);
 
         std::ifstream ifs(dbuf, std::ios::binary);
         std::string line;
@@ -394,7 +395,7 @@ int wrap_amdsysfs_get_clock(wrap_amdsysfs_handle* sysfsh, int index, unsigned in
             if (std::regex_search(line, sm, regex1))
             {
                 if (sm.size() == 2)
-                {
+                { 
                     *memoryClock = atoi(sm.str(1).c_str());
                     //printf("1 %s\n", sm.str(1).c_str());
                 }
@@ -438,4 +439,143 @@ int wrap_amdsysfs_get_clock(wrap_amdsysfs_handle* sysfsh, int index, unsigned in
     }
 
     return -1;
+}
+
+bool g_getmemmaker = false;
+int g_getmemmakercount = 0;
+void* pthreadtimeoutproc(void* arg)
+{
+	FILE* fp = (FILE*)arg;
+	if (fp){
+		while (true){
+			g_getmemmakercount++;
+			if (!g_getmemmaker){
+				if (g_getmemmakercount > 10){
+					printf("mem_maker 6\n");
+					pclose(fp);
+
+					break;
+				}				
+			}
+			else{
+				printf("mem_maker 7\n");
+				break;
+			}
+			sleep(1);
+		}
+	}
+	printf("mem_maker 8\n");
+	return 0;
+}
+
+int wrap_amdsysfs_get_mem_maker(wrap_amdsysfs_handle* sysfsh)
+{
+	try
+    {
+        char dbuf[120];
+        //snprintf(dbuf, 120, "timeout 10 /home/lsminer/lsminer/boot/amdmeminfo");
+		snprintf(dbuf, 120, "/opt/amdmeminfo.txt");
+		FILE *fp = NULL;
+		printf("mem_maker 1\n");
+		//fp = popen(dbuf, "r");
+		fp = fopen(dbuf, "r");
+		printf("mem_maker 2\n");
+		if (fp == NULL)
+		{
+			printf("popen error!\n");
+			return 1;
+		}
+		
+		printf("mem_maker 3\n");
+		char *lineptr = NULL;
+		size_t n = 0;		
+        std::string line;
+		char pcibuf[32];
+		int index = -1;
+		while (getline(&lineptr, &n, fp) != -1)
+        {			
+			line = lineptr;
+			printf("%s\n", line.c_str());
+            std::smatch sm;
+            std::regex regex1("(PCI: )(.*\n)");
+            if (std::regex_search(line, sm, regex1))
+            {
+				//printf("%d, %s\n", sm.size(), sm.str(2).c_str());
+                if (sm.size() == 3)
+                {
+                	for (int i = 0; i < sysfsh->sysfs_gpucount; i++){
+                		snprintf(pcibuf, sizeof(pcibuf), "%02x:%02x.%01x", sysfsh->sysfs_pci_bus_id[i], sysfsh->sysfs_pci_device_id[i], sysfsh->sysfs_pci_function_id[i]);
+						//printf("pcibuf, %s\n", pcibuf);
+						if (strstr(sm.str(2).c_str(), pcibuf)) {
+							index = i;	
+							//printf("mem_maker 1 %s\n", sm.str(2).c_str());
+							break;
+						}
+					}	                   
+                }
+                continue;
+            }
+            std::regex regex2("(Memory Model: )(.* )");
+            if (std::regex_search(line, sm, regex2))
+            {
+				//printf("%d, %s\n", sm.size(), sm.str(2).c_str());
+                if (sm.size() == 3)
+                {
+					if (index != -1) {						
+						strcpy(sysfsh->memMaker[index], sm.str(2).c_str());						
+						//printf("mem_maker 2 %d, %s\n", index, sm.str(2).c_str());
+						index = -1;
+					}
+				}
+                continue;
+            }  
+        }
+		free(lineptr);
+		
+		//pclose(fp);
+		fclose(fp);
+		printf("mem_maker 4\n");
+    }
+    catch (const std::exception& ex)
+    {
+        cwarn << "Error in wrap_amdsysfs_get_mem_maker: " << ex.what();
+    }
+	g_getmemmaker = true;
+	printf("mem_maker 5\n");
+    return -1;
+}
+
+void* getMemMakerProc(void* arg){
+	wrap_amdsysfs_get_mem_maker((wrap_amdsysfs_handle*)arg);
+	return NULL;
+}
+
+int getMemMaker(wrap_amdsysfs_handle* sysfsh){
+	pthread_t pht;
+	pthread_create(&pht, NULL, getMemMakerProc, (void*)sysfsh);
+	while (true){
+		g_getmemmakercount++;
+		if (!g_getmemmaker){
+			if (g_getmemmakercount > 10){
+				printf("mem_maker 6\n");
+				break;
+			}
+		}
+		else{
+			printf("mem_maker 7\n");
+			break;
+		}
+		sleep(1);
+	}
+	return 1;
+}
+
+int wrap_amdsysfs_get_gpu_mem_maker(wrap_amdsysfs_handle* sysfsh, int index, char* makerbuf, int bufsize)
+{
+	if (index < 0 || index >= sysfsh->sysfs_gpucount || bufsize < 8)
+		return -1;
+
+	snprintf(makerbuf, bufsize, "%s", sysfsh->memMaker[index]);
+
+	return 0;
 }
