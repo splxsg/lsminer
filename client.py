@@ -32,6 +32,7 @@ class lsminerClient(object):
         self.minerargs = {}
         self.minerpath = ''
         self.subprocess = None
+        self.minerstatus = 0
         self.mthread = None
         self.rthread = None
         self.gthread = None
@@ -484,6 +485,7 @@ class lsminerClient(object):
 
     def minerThreadProc(self):
         try:
+<<<<<<< HEAD
             mcfg = self.minerargs
             if not self.checkMinerVer(mcfg):
                 self.getNewMinerFile(mcfg)
@@ -506,6 +508,24 @@ class lsminerClient(object):
                     break
                 else:
                     time.sleep(3)
+=======
+            while True:
+                mcfg = self.minerargs
+                if not self.checkMinerVer(mcfg):
+                    self.getNewMinerFile(mcfg)
+                    subprocess.run('bash /usr/bin/lsminer_rw', shell=True)
+                cmd = self.minerpath + ' ' + mcfg['customize']
+                process = subprocess.Popen(cmd, shell=True)
+                self.minerstatus = 1
+                time.sleep(3)
+                process.terminate()
+                process.wait()
+                logging.info("Miner is terminated wait for 10 sec")
+                self.minerstatus = 0
+                time.sleep(10)
+                #update miner time
+                self.minertime = datetime.now()
+>>>>>>> 9df9e2bcf4b11a6ac202fd168e274c00ea48f09d
         except Exception as e:
             logging.error("function minerThread exception. msg: " + str(e))
             logging.exception(e)
@@ -525,9 +545,9 @@ class lsminerClient(object):
                     self.killAllMiners(self.minerpath[1:])
 
                 #start new miner thread
-                self.mthread = threading.Thread(target=lsminerClient.minerThreadProc, args=(self,))
-                self.mthread.start()
-                
+                if self.mthread == None:
+                    self.mthread = threading.Thread(target=lsminerClient.minerThreadProc, args=(self,))
+                    self.mthread.start()
                 #start new report Thread
                 if self.rthread == None:
                     self.rthread = threading.Thread(target=lsminerClient.reportThread, args=(self,))
@@ -551,7 +571,6 @@ class lsminerClient(object):
             mcfg = self.minerargs
             if not self.checkMinerVer(mcfg):
                 self.getNewMinerFile(mcfg)
-
             args = []
             args.append(self.minerpath)
             margs = shlex.split(mcfg['customize'])
