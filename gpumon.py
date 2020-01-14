@@ -219,7 +219,7 @@ def getBoardName():
     try:
         boardname = []
         with open("/opt/clinfo.txt", "r", encoding="utf-8") as fs:
-            pci = fs..read().splitlines(False)
+            pci = fs.read().splitlines(False)
             for l in pci:
                 if 'Board name:' in l.decode():
                     name = l.decode().split(':')[1].strip()
