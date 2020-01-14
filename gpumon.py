@@ -218,11 +218,11 @@ def fsGetGpuName():
 def getBoardName():
     try:
         boardname = []
-        with open("/opt/clinfo.txt", "r", encoding="utf-8") as fs:
+        with open("/opt/clinfo.txt", "r") as fs:
             pci = fs.read().splitlines(False)
             for l in pci:
-                if 'Board name:' in l.decode():
-                    name = l.decode().split(':')[1].strip()
+                if 'Board name:' in l:
+                    name = l.split(':')[1].strip()
                     print(name)
                     boardname.append(name)
         return boardname
