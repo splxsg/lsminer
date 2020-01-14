@@ -48,15 +48,25 @@ if [ "$(lspci | grep -E "VGA|3D controller" | grep AMD | wc -l)" -gt 0 ]; then
 		sleep 0.2 && sync
 	done 
 
+	if [ -f /opt/amdmeminfo.txt ];then
+		echo "amdmeminfo.txt exist"
+	else
+		AMDMEMINFO=$(sudo /home/lsminer/lsminer/boot/amdmeminfo) && wait
+		echo $AMDMEMINFO | sudo tee /opt/amdmeminfo.txt
+		wait && sync && sleep 1
+	fi
+
+	if [ -f /opt/amdmeminfo.txt ];then
+		echo "clinfo.txt exist"
+	else
+		CLINFO=$(sudo /opt/amdgpu-pro/bin/clinfo) && wait
+		echo $CLINFO | sudo tee /opt/clinfo.txt
+		wait && sync && sleep 1
+	fi
+
 fi
 
-if [ -f /opt/amdmeminfo.txt ];then
-	echo "amdmeminfo.txt exist"
-else
-	GETHARDWARE=$(sudo /home/lsminer/lsminer/boot/amdmeminfo) && wait
-	echo $GETHARDWARE | tee /opt/amdmeminfo.txt
-	wait && sync && sleep 1
-fi
+
 
 #检查accesskey文件是否正常，如果为空，用户必须手动输入accesskey
 ACCESSKEY=$(cat /home/lsminer/lsminer.conf | cut -d ' ' -f 1 | tr '[:upper:]' '[:lower:]' | tr -d '\r' | tr -d '\n')

@@ -3,6 +3,8 @@
 cd /home/lsminer/lsminer
 
 sudo rm -rf /home/lsminer/lsminer/*.log
+sudo rm -rf /opt/amdmeminfo.txt
+sudo rm -rf /opt/clinfo.txt
 
 [ -f "/etc/X11/xorg.conf" ] && rm -rf /etc/X11/xorg.conf
 

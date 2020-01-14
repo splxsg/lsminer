@@ -25,11 +25,11 @@ headers = {
 
 def stopService():
     subprocess.run('sudo systemctl stop redline', shell=True)
-    subprocess.run('sudo systemctl stop ttyshare', shell=True)
+    #subprocess.run('sudo systemctl stop ttyshare', shell=True)
 
 def startService():
     subprocess.run('sudo systemctl start redline', shell=True)
-    subprocess.run('sudo systemctl start ttyshare', shell=True)
+    #subprocess.run('sudo systemctl start ttyshare', shell=True)
 
 
 def checkClientUpdate(ver, url):

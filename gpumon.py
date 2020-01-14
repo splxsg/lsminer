@@ -216,20 +216,20 @@ def fsGetGpuName():
     return gpuName
 
 def getBoardName():
-    boardname = []
-    #with os.popen('/opt/amdgpu-pro/bin/clinfo') as p:
-    #    pci = p.read().splitlines(False)
-    cmd = ['timeout', '10', '/opt/amdgpu-pro/bin/clinfo']
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    outs = p.communicate(timeout=10)[0]
-    #print(outs)
-    pci = outs.splitlines(False)
-    for l in pci:
-        if 'Board name:' in l.decode():
-            name = l.decode().split(':')[1].strip()
-            print(name)
-            boardname.append(name)
-    return boardname
+    try:
+        boardname = []
+        with open("/opt/clinfo.txt", "r", encoding="utf-8") as fs:
+            pci = fs..read().splitlines(False)
+            for l in pci:
+                if 'Board name:' in l.decode():
+                    name = l.decode().split(':')[1].strip()
+                    print(name)
+                    boardname.append(name)
+        return boardname
+    except Exception as e:
+        logging.error("function getBoardName exception. msg: " + str(e))
+        logging.exception(e)
+    return 0
 
 def fsGetGpuInfo():
     info = []

@@ -2,6 +2,7 @@
 
 cd /home/lsminer/lsminer
 
+sudo apt-get install xinit xterm -y
 sudo apt-get install python3-pip screen -y
 sudo pip3 install cffi
 
@@ -10,12 +11,17 @@ sudo chmod a+x /home/lsminer/lsminer/client.py
 sudo chmod a+x /home/lsminer/lsminer/update.py
 sudo chmod a+x /home/lsminer/lsminer/redline.py
 sudo chmod a+x /home/lsminer/lsminer/tty-share
+sudo chmod a+x /home/lsminer/lsminer/lsminer_rw
+sudo chmod a+x /home/lsminer/lsminer/ohgodatool
+sudo chmod a+x /home/lsminer/lsminer/overclock
+sudo chmod a+x /home/lsminer/lsminer/lsminer_rw
 sudo chmod a+x /home/lsminer/lsminer/boot/run
 sudo chmod a+x /home/lsminer/lsminer/boot/miner
 sudo chmod a+x /home/lsminer/lsminer/boot/driver
 sudo chmod a+x /home/lsminer/lsminer/boot/redline
 sudo chmod a+x /home/lsminer/lsminer/boot/ttyshare
-sudo chmod a+rwx /home/lsminer
+sudo chmod a+x /home/lsminer/lsminer/boot/amdmeminfo
+sudo chmod a+x /home/lsminer/lsminer/oc/runnvoc
 
 sync
 
@@ -35,7 +41,7 @@ sudo cp -f /home/lsminer/lsminer/etc/screenrc /etc/screenrc
 sudo cp -f /home/lsminer/lsminer/etc/lsminer.conf /home/lsminer/lsminer.conf
 ln -s /home/lsminer/lsminer/oc/runnvoc /usr/bin/runnvoc
 ln -s /home/lsminer/lsminer/lsminer_rw /usr/bin/lsminer_rw
-apt install xinit xterm -y
+
 sync
 sleep 1
 
