@@ -59,8 +59,8 @@ if [ "$(lspci | grep -E "VGA|3D controller" | grep AMD | wc -l)" -gt 0 ]; then
 	if [ -f /opt/clinfo.txt ];then
 		echo "clinfo.txt exist"
 	else
-		CLINFO=$(sudo /opt/amdgpu-pro/bin/clinfo) && wait
-		echo $CLINFO | sudo tee /opt/clinfo.txt
+		#CLINFO=$(sudo /opt/amdgpu-pro/bin/clinfo) && wait
+		sudo /opt/amdgpu-pro/bin/clinfo | sudo tee /opt/clinfo.txt
 		wait && sync && sleep 1
 	fi
 
