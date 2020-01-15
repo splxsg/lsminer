@@ -51,8 +51,8 @@ if [ "$(lspci | grep -E "VGA|3D controller" | grep AMD | wc -l)" -gt 0 ]; then
 	if [ -f /opt/amdmeminfo.txt ];then
 		echo "amdmeminfo.txt exist"
 	else
-		AMDMEMINFO=$(sudo /home/lsminer/lsminer/boot/amdmeminfo) && wait
-		echo $AMDMEMINFO | sudo tee /opt/amdmeminfo.txt
+		#AMDMEMINFO=$(sudo /home/lsminer/lsminer/boot/amdmeminfo) && wait
+		sudo /home/lsminer/lsminer/boot/amdmeminfo | sudo tee /opt/amdmeminfo.txt
 		wait && sync && sleep 1
 	fi
 
