@@ -335,9 +335,18 @@ class lsminerClient(object):
                 else:
                     reqData['hashrate'] = minerinfo['totalhashrate']
                     mc = len(minerinfo['hashrate'])
+                    j = 0
                     for i in range(len(gpuinfo)):
-                        if i < mc:
-                            gpustatus += str(i) + '|'+ gpuinfo[i]['name'] + '|' + str(gpuinfo[i]['tempC']) + '|' + str(minerinfo['hashrate'][i]) + '|' + str(gpuinfo[i]['fanpcnt']) + '|' + str(gpuinfo[i]['power_usage']) + '$'
+                        if j < mc:
+                            if gpuclock:
+                                if gpuclock[i]['currentCoreClock'] == 0:
+                                    gpustatus += str(i) + '|'+ gpuinfo[i]['name'] + '|' + str(gpuinfo[i]['tempC']) + '|0|' + str(gpuinfo[i]['fanpcnt']) + '|' + str(gpuinfo[i]['power_usage']) + '$'
+                                else:                                    
+                                    gpustatus += str(i) + '|'+ gpuinfo[i]['name'] + '|' + str(gpuinfo[i]['tempC']) + '|' + str(minerinfo['hashrate'][j]) + '|' + str(gpuinfo[i]['fanpcnt']) + '|' + str(gpuinfo[i]['power_usage']) + '$'
+                                    j = j + 1
+                            else:
+                                gpustatus += str(i) + '|'+ gpuinfo[i]['name'] + '|' + str(gpuinfo[i]['tempC']) + '|' + str(minerinfo['hashrate'][j]) + '|' + str(gpuinfo[i]['fanpcnt']) + '|' + str(gpuinfo[i]['power_usage']) + '$'
+                                j = j + 1
                         else:
                             gpustatus += str(i) + '|'+ gpuinfo[i]['name'] + '|' + str(gpuinfo[i]['tempC']) + '|0|' + str(gpuinfo[i]['fanpcnt']) + '|' + str(gpuinfo[i]['power_usage']) + '$'                            
                 gpustatus += str(self.getClientUptimeMinutes())
@@ -478,7 +487,7 @@ class lsminerClient(object):
                 lines = p.read().splitlines(False)
                 return len(lines)
         except Exception as e:
-                logging.error("function getMinerProcessCounts exception. msg: " + str(e))
+                logging.error("function getMinerProcessCounts exception. msg: " + str(e))
                 logging.exception(e)
                 return 0
 
@@ -501,7 +510,7 @@ class lsminerClient(object):
                 logging.info("miner count: "+str(minerProcount))
                 if minerProcount == 0:
                     self.minerstatus = 0
-                    logging.info('miner terminated. client will be getMinerargs and restart.')
+                    logging.info('miner terminated. client will be getMinerargs and restart.')
                     q.put(3)
                     break
                 else:
@@ -530,6 +539,8 @@ class lsminerClient(object):
                 
                 #start new report Thread
                 if self.rthread == None:
+                    self.gpuinfo = self.getGpuInfo()
+                    self.gpuclock = self.getGpuClock()
                     self.rthread = threading.Thread(target=lsminerClient.reportThread, args=(self,))
                     self.rthread.start()
                 if self.gcthread == None:
@@ -818,7 +829,7 @@ class lsminerClient(object):
         self.cfg = loadCfg()
         thread = threading.Thread(target=lsminerClient.recvThread, args=(self,))
         thread.start()
-
+        
     def run(self):
         #q.put(1)
         while True:
