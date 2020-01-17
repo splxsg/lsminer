@@ -9,7 +9,7 @@ function main()
 {
     sess=$(tmux ls | grep monitor | wc -l)
 
-    if [[ -z $sess ]]; then
+    if [ $sess==0 ]; then
         echo "No session: monitor found"
         tmux new-session -d -s monitor >/dev/null
         tmux rename-window -t monitor:0 'main'
