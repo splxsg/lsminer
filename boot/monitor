@@ -35,14 +35,14 @@ function attach_lsminer()
 function attach_minerkernel()
 {
     while true; do
-        screens=$(screen -ls minerkernel | grep minerkernel | wc -l)
+        screens=$(sudo screen -ls minerkernel | grep minerkernel | wc -l)
 
         if [[ -z $screens ]]; then
             echo "No minerkernel screens found. sleep 1..."
             sleep 1
         else
             echo "found minerkernel screen session"
-            screen -x minerkernel
+            sudo screen -x minerkernel
             break
         fi
     done
