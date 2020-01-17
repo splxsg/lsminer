@@ -1,6 +1,8 @@
 #!/bin/bash
 cd /home/lsminer/lsminer
 
+/home/lsminer/lsminer/boot/monitor
+
 function text()
 {
 	local color=${1}
@@ -89,8 +91,6 @@ export GPU_USE_SYNC_OBJECTS=1
 export LD_LIBRARY_PATH=/home/lsminer/lsminer/libcuda
 
 wait && sync && sleep 1
-
-/home/lsminer/lsminer/boot/monitor main
 
 python3 /home/lsminer/lsminer/update.py
 
