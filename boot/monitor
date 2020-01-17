@@ -12,8 +12,8 @@ function main()
     tmux rename-window -t monitor:0 'main'
     tmux splitw -h -t monitor:0.0
     wait && sync && sleep 1
-    tmux send-keys -t sess:0.0 '/home/lsminer/lsminer/boot/monitor lsminer' Enter
-    tmux send-keys -t sess:0.1 '/home/lsminer/lsminer/boot/monitor minerkernel' Enter
+    tmux send-keys -t monitor:0.0 '/home/lsminer/lsminer/boot/monitor lsminer' Enter
+    tmux send-keys -t monitor:0.1 '/home/lsminer/lsminer/boot/monitor minerkernel' Enter
 }
 
 function attach_lsminer()
