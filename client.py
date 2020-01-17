@@ -499,8 +499,8 @@ class lsminerClient(object):
                 subprocess.run('bash /usr/bin/lsminer_rw', shell=True)
             #run miner kernel by screen 
             arg = self.minerpath + ' ' + mcfg['customize']
-            cmd = Template('screen -dm -S minerkernel -t minerkernel -L bash -c "python3 /home/lsminer/lsminer/kernel.py ${arg}"')
-            cmd.substitute(arg=arg)
+            cmdtmp = Template('screen -dm -S minerkernel -t minerkernel -L bash -c "python3 /home/lsminer/lsminer/kernel.py ${arg}"')
+            cmd = cmdtmp.substitute(arg=arg)
             subprocess.run(cmd, shell=True)
             #process = subprocess.Popen(cmd, shell=True)
             #time.sleep(3)

@@ -38,7 +38,7 @@ echo ---------------------------
 echo ""
 echo "Files copying..."
 echo ""
-cp -f /home/lsminer/lsminer/etc/minerscreen.desktop /home/lsminer/.config/autostart/minerscreen.desktop
+#cp -f /home/lsminer/lsminer/etc/minerscreen.desktop /home/lsminer/.config/autostart/minerscreen.desktop
 cp -f /home/lsminer/lsminer/etc/tmux.conf /home/lsminer/.tmux.conf
 #cp -f /home/lsminer/lsminer/etc/wallpaper.jpg /home/lsminer/wallpaper.jpg
 sudo cp -f /home/lsminer/lsminer/etc/prepare.service /etc/systemd/system/prepare.service
