@@ -7,12 +7,20 @@ function usage()
 
 function main()
 {
-    tmux new-session -d -s monitor >/dev/null
-    tmux rename-window -t monitor:0 'main'
-    tmux splitw -h -t monitor:0.0
-    wait && sync && sleep 1
-    tmux send-keys -t monitor:0.0 '/home/lsminer/lsminer/boot/monitor lsminer' Enter
-    tmux send-keys -t monitor:0.1 '/home/lsminer/lsminer/boot/monitor minerkernel' Enter
+    sess=$(tmux ls | grep monitor | wc -l)
+
+    if [[ -z $sess ]]; then
+        echo "No session: monitor found"
+        tmux new-session -d -s monitor >/dev/null
+        tmux rename-window -t monitor:0 'main'
+        tmux splitw -h -t monitor:0.0
+        wait && sync && sleep 1
+        tmux send-keys -t monitor:0.0 '/home/lsminer/lsminer/boot/monitor lsminer' Enter
+        tmux send-keys -t monitor:0.1 '/home/lsminer/lsminer/boot/monitor minerkernel' Enter
+    else
+        echo "found session: monitor. exit"
+    fi
+    
 }
 
 function attach_lsminer()
