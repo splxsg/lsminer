@@ -8,10 +8,14 @@ wait && sync && sleep 1
 
 sudo pip3 install cffi
 
-sudo chmod a+x /home/lsminer/lsminer/changekey
 sudo chmod a+x /home/lsminer/lsminer/client.py
 sudo chmod a+x /home/lsminer/lsminer/update.py
 sudo chmod a+x /home/lsminer/lsminer/redline.py
+sudo chmod a+x /home/lsminer/lsminer/gpumon.py
+sudo chmod a+x /home/lsminer/lsminer/kernel.py
+sudo chmod a+x /home/lsminer/lsminer/minerinfo.py
+sudo chmod a+x /home/lsminer/lsminer/tools.py
+sudo chmod a+x /home/lsminer/lsminer/changekey
 sudo chmod a+x /home/lsminer/lsminer/tty-share
 sudo chmod a+x /home/lsminer/lsminer/lsminer_rw
 sudo chmod a+x /home/lsminer/lsminer/ohgodatool
