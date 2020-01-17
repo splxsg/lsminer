@@ -2,8 +2,10 @@
 
 cd /home/lsminer/lsminer
 
-sudo apt-get install xinit xterm -y
-sudo apt-get install python3-pip screen -y
+sudo apt-get install xinit xterm python3-pip screen tmux -y
+
+wait && sync && sleep 1
+
 sudo pip3 install cffi
 
 sudo chmod a+x /home/lsminer/lsminer/changekey
@@ -21,6 +23,7 @@ sudo chmod a+x /home/lsminer/lsminer/boot/driver
 sudo chmod a+x /home/lsminer/lsminer/boot/redline
 sudo chmod a+x /home/lsminer/lsminer/boot/ttyshare
 sudo chmod a+x /home/lsminer/lsminer/boot/amdmeminfo
+sudo chmod a+x /home/lsminer/lsminer/boot/monitor
 sudo chmod a+x /home/lsminer/lsminer/oc/runnvoc
 
 sync

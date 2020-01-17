@@ -1,0 +1,67 @@
+#!/bin/bash
+
+function usage()
+{
+	printf "monitor Control\n\n"
+
+}
+
+function main()
+{
+    tmux new-session -d -s monitor >/dev/null
+    tmux rename-window -t monitor:0 'main'
+    tmux splitw -h -t monitor:0.0
+    wait && sync && sleep 1
+    tmux send-keys -t sess:0.0 '/home/lsminer/lsminer/boot/monitor lsminer' Enter
+    tmux send-keys -t sess:0.1 '/home/lsminer/lsminer/boot/monitor minerkernel' Enter
+}
+
+function attach_lsminer()
+{
+    while true; do
+        screens=$(screen -ls lsminer | grep lsminer | wc -l)
+
+        if [[ -z $screens ]]; then
+            echo "No lsminer screens found. sleep 1..."
+            sleep 1
+        else
+            echo "found lsminer screen session"
+            screen -x lsminer
+            break
+        fi
+    done
+}
+
+function attach_minerkernel()
+{
+    while true; do
+        screens=$(screen -ls minerkernel | grep minerkernel | wc -l)
+
+        if [[ -z $screens ]]; then
+            echo "No minerkernel screens found. sleep 1..."
+            sleep 1
+        else
+            echo "found minerkernel screen session"
+            screen -x minerkernel
+            break
+        fi
+    done
+}
+
+case $1 in
+	main)
+        echo "monitor main"
+		main
+	;;
+	lsminer)
+        echo "monitor lsminer"
+		attach_lsminer
+	;;
+	minerkernel)
+		echo "monitor minerkernel"
+		attach_minerkernel
+	;;
+	*)
+		usage
+	;;
+esac

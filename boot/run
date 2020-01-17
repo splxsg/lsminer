@@ -92,4 +92,4 @@ wait && sync && sleep 1
 
 sudo python3 /home/lsminer/lsminer/update.py
 
-
+/home/lsminer/lsminer/boot/monitor
