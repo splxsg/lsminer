@@ -90,6 +90,7 @@ export LD_LIBRARY_PATH=/home/lsminer/lsminer/libcuda
 
 wait && sync && sleep 1
 
-sudo python3 /home/lsminer/lsminer/update.py
-
 /home/lsminer/lsminer/boot/monitor main
+
+python3 /home/lsminer/lsminer/update.py
+

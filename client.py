@@ -202,7 +202,6 @@ class lsminerClient(object):
                 logging.info("here "+str(cnt))
                 name = self.GenerateAMDdeviceID(fsGetGpuInfo())#fsGetGpuName()
                 logging.info("name "+str(name))
-            logging.info('GGGGGGGGGGGGGGGGGGGGGGGGG'+name)
             reqData = {}
             reqData['method'] = 1
             reqData['accesskey'] = self.accesskey
@@ -756,7 +755,6 @@ class lsminerClient(object):
             self.ttyservicestarting = 1
             while True:
                 try:
-                    logging.info("abc")
                     if not os.path.exists(filepath):
                         logging.warning('can not find ttyshare.id file. sleep 10 seconds and try again.')
                         time.sleep(10)
@@ -766,7 +764,6 @@ class lsminerClient(object):
                         self.consoleurl = fs.readline().replace("\n","")
                         logging.info("ttyshareurl: " + str(self.consoleurl))
                     q.put(14)
-                    logging.info("bnnnnn")
                     break
                 except Exception as e:
                     logging.info('ttyshareProc exception. msg: ' + str(e))

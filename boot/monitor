@@ -3,7 +3,6 @@
 function usage()
 {
 	printf "monitor Control\n\n"
-
 }
 
 function main()
@@ -23,28 +22,26 @@ function attach_lsminer()
 
         if [[ -z $screens ]]; then
             echo "No lsminer screens found. sleep 1..."
-            sleep 1
         else
             echo "found lsminer screen session"
             screen -x lsminer
-            break
         fi
+        sleep 1
     done
 }
 
 function attach_minerkernel()
 {
     while true; do
-        screens=$(sudo screen -ls minerkernel | grep minerkernel | wc -l)
+        screens=$(screen -ls minerkernel | grep minerkernel | wc -l)
 
         if [[ -z $screens ]]; then
             echo "No minerkernel screens found. sleep 1..."
-            sleep 1
         else
             echo "found minerkernel screen session"
-            sudo screen -x minerkernel
-            break
+            screen -x minerkernel
         fi
+        sleep 1
     done
 }
 
