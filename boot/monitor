@@ -12,7 +12,7 @@ function main()
     if [ $sess==0 ]; then
         echo "No session: monitor found"
         tmux new-session -d -s monitor >/dev/null
-        tmux rename-window -t monitor:0 'main'
+        #tmux rename-window -t monitor:0 'main'
         tmux splitw -h -t monitor:0.0
         wait && sync && sleep 1
         tmux send-keys -t monitor:0.0 '/home/lsminer/lsminer/boot/monitor lsminer' Enter
