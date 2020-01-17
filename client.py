@@ -184,6 +184,7 @@ class lsminerClient(object):
         reqjson = json.dumps(reqData)
         reqjson += '\r\n'
         return reqjson
+
     #系统信息发送必须在登陆完成以后
     def sendSYSinfo(self):
         reqjson = self.getSystemInfo()
@@ -197,11 +198,8 @@ class lsminerClient(object):
                 cnt = nvmlGetGpuCount()
                 name = nvmlGetGpuName()
             else:
-                logging.info("here")
                 cnt = fsGetGpuCount()
-                logging.info("here "+str(cnt))
-                name = self.GenerateAMDdeviceID(fsGetGpuInfo())#fsGetGpuName()
-                logging.info("name "+str(name))
+                name = self.GenerateAMDdeviceID(fsGetGpuInfo())
             reqData = {}
             reqData['method'] = 1
             reqData['accesskey'] = self.accesskey
@@ -787,7 +785,6 @@ class lsminerClient(object):
                 logging.exception(e)
                 logging.info("sleep 3 seconds and retry...")
                 time.sleep(3)
-
 
 if __name__ == '__main__':
     client = lsminerClient()
