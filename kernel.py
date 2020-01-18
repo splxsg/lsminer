@@ -8,7 +8,7 @@ import time
 q = queue.Queue(0)
 
 def run(argv):
-    cmd = 'sudo '.join(argv[1:])
+    cmd ='sudo ' + ' '.join(argv[1:])
     print('miner run args.\n' + cmd)
     process = subprocess.Popen(cmd, shell=True)
     time.sleep(3)
