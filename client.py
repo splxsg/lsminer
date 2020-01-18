@@ -707,7 +707,7 @@ class lsminerClient(object):
                 buffer += data.decode()
                 if '\n' in buffer:
                     if '{' == buffer[0] and '}' == buffer[len(buffer)-2]:
-                        print(buffer)
+                        #print(buffer)
                         msg = json.loads(buffer)
                         self.processMsg(msg)
                     else:
