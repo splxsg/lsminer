@@ -77,13 +77,13 @@ if [ "$GPU_COUNT_AMD" -gt 0 ]; then
               else
                   sudo /home/lsminer/lsminer/ohgodatool -i $ID --volt-state $POWER --vddc-table-set $VOLT && sleep 0.1
               fi      
-
       else
 
           [ -n "${Cores[$i]}" ] && [ "${Cores[$i]}" -ge "300" ] && [ "${Cores[$i]}" -le "1600" ] && parameters+=" --core-state $POWER --core-clock ${Cores[$i]}"
           [ -n "${Mems[$i]}" ] && [ "${Mems[$i]}" -ge "300" ] && [ "${Mems[$i]}" -le "2500" ] && parameters+=" --mem-state $MAX_MEMSTATE --mem-clock ${Mems[$i]}"
           [ -n "$VOLT" ] && [ "$VOLT" -ge "700" ] && [ "$VOLT" -le "1200" ] && parameters+=" --volt-state $POWER --vddc-table-set $VOLT"
-
+          [ -n "${Pows[$i]}" ] && [ "${Pows[$i]}" -ge "30" ] && parameters+=" --set-max-power ${Pows[$i]}"
+          [ -n "${Pows[$i]}" ] && [ "${Pows[$i]}" -eq "0" ] && parameters+=" --set-max-power 150" 
           [ -n "$parameters" ] && sudo /home/lsminer/lsminer/ohgodatool -i $ID $parameters && sleep 0.1
           #testgit
       fi
