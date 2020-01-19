@@ -1,0 +1,57 @@
+#!/bin/bash
+
+cd /home/lsminer/lsminer
+
+function usage()
+{
+	printf "lsremote Control\n\n"
+	printf "Usage: lsremote [options]\n"
+	printf "start: Start lsremote Service\n"
+	printf "stop: Stop lsremote Service\n"
+	printf "restart: Restart lsremote Service\n"
+
+}
+
+function start()
+{
+	SCREEN=$(screen -ls lsremote | grep lsremote | wc -l)
+	[ "$SCREEN" -gt 1 ] && echo "lsremote deamon already running..." && exit
+
+	echo "lsremote Deamon Starting..."
+	screen -dm -S lsremote -t lsremote -L bash -c "python3 /home/lsminer/lsminer/lsremote.py"
+}
+
+
+function stop()
+{
+	screens=`screen -ls lsremote | grep -E "[0-9]+\.lsremote" | cut -d. -f1 | awk '{print $1}'`
+
+	if [[ -z $screens ]]; then
+		echo "No lsremote screens found"
+	else
+		for pid in $screens; do
+			echo "Stopping screen session: $pid.lsremote"
+			screen -S $pid -X quit
+		done
+	fi
+}
+
+
+case $1 in
+	start)
+		start
+	;;
+	stop)
+		stop
+	;;
+	restart)
+
+		echo "Restarting rdline deamon..."
+		stop
+		wait && sync && sleep 1
+		start
+	;;
+	*)
+		usage
+	;;
+esac

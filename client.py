@@ -41,10 +41,7 @@ class lsminerClient(object):
         self.minerstatus = 0
         self.startime = datetime.now()
         self.minertime = datetime.now()
-        self.consoleurl = ''
         self.accesskey = getAccessKey()
-        self.ttyserver = self.getTTYServerString()
-        self.ttyservicestarting = 0
         self.nvcount = nvmlGetGpuCount()
         self.amdcount = fsGetGpuCount()
         self.gpuType = 1 if self.nvcount > self.amdcount else 2    #nvidia==1, amd==2
@@ -87,33 +84,6 @@ class lsminerClient(object):
             logging.error("function checkServerConnection exception. msg: " + str(e))
             logging.exception(e)
         return False
-
-    def checkTTYServerConnection(self):
-        try:
-            if self.ttyserver:
-                with os.popen('netstat -ent') as p:
-                    netlines = p.read().splitlines(False)
-                    for line in netlines:
-                        if self.ttyserver in line and 'ESTABLISHED' in line:
-                            return True
-        except Exception as e:
-            logging.error("function checkTTYServerConnection exception. msg: " + str(e))
-            logging.exception(e)
-        return False
-
-    def getTTYServerString(self):
-        try:
-            with open('./boot/ttyshare', 'r', encoding="utf-8") as text:
-                for line in text.readlines():
-                    if '--server ' in line:
-                        ttyserver = line.split('--server ')[1].strip()
-                        logging.info('find tty server string: ' + ttyserver)
-                        return ttyserver
-            logging.warning('do not find tty server string.')
-        except Exception as e:
-            logging.error("function getTTYServerString exception. msg: " + str(e))
-            logging.exception(e)
-        return ''
 
     def connectSrv(self):
         try:
@@ -185,7 +155,7 @@ class lsminerClient(object):
         reqjson += '\r\n'
         return reqjson
 
-    #系统信息发送必须在登陆完成以后
+    #client can send system info when user logined in server.
     def sendSYSinfo(self):
         reqjson = self.getSystemInfo()
         logging.info('lsminerClient send system info.')
@@ -268,26 +238,6 @@ class lsminerClient(object):
         except Exception as e:
             logging.error('sendLogoutReq exception. msg: ' + str(e))
             logging.exception(e)
-            return None
-
-    def sendConsoleIdReq(self):
-        try:
-            reqData = {}
-            reqData['method'] = 14
-            reqData['params'] = self.consoleurl
-            reqData['os'] = self.cfg['os']
-            reqjson = json.dumps(reqData)
-            reqjson += '\r\n'
-            logging.info('lsminerClient send console request.')
-            logging.info(reqjson)
-            self.sock.sendall(reqjson.encode("utf-8"))
-        except Exception as e:
-            logging.error('sendConsoleIdReq exception. msg: ' + str(e))
-            logging.exception(e)
-            time.sleep(1)
-            if not self.checkServerConnection():
-                #subprocess.run('sudo systemctl restart miner', shell=True)
-                self.sock = None
             return None
 
     def onWelcome(self, msg):
@@ -499,10 +449,9 @@ class lsminerClient(object):
             cmdtmp = Template('screen -dm -S minerkernel -t minerkernel -L bash -c "python3 /home/lsminer/lsminer/kernel.py ${arg}"')
             cmd = cmdtmp.substitute(arg=arg)
             subprocess.run(cmd, shell=True)
-            #process = subprocess.Popen(cmd, shell=True)
-            #time.sleep(3)
+
             self.minerstatus = 1
-            #process.terminate()
+
             #update miner time
             self.minertime = datetime.now()
             while True:
@@ -519,7 +468,6 @@ class lsminerClient(object):
             logging.error("function minerThread exception. msg: " + str(e))
             logging.exception(e)
 
-    
     def onGetMinerArgs(self, msg):
         try:
             logging.info('recv server get miner args msg: ' + str(msg))
@@ -572,11 +520,6 @@ class lsminerClient(object):
         self.sock.close()
         time.sleep(0.5)
         sys.exit(123)
-
-    def onGetTTYShareId(self, msg):
-        logging.info('recv server get ttyshare msg: ' + str(msg))
-        thread = threading.Thread(target=lsminerClient.ttyshareProc, args=(self,))
-        thread.start()
 
     def OverClockProc(self,msg):
         logging.info('recv server overclock msg: ' + str(msg))
@@ -641,7 +584,6 @@ class lsminerClient(object):
         thread = threading.Thread(target=lsminerClient.OverClockProc, args=(self,msg))
         thread.start()
 
-
     def processMsg(self, msg):
         if 'method' in msg:
             if msg['method'] == 1:
@@ -671,7 +613,7 @@ class lsminerClient(object):
             elif msg['method'] == 13:
                 pass
             elif msg['method'] == 14:
-                self.onGetTTYShareId(msg)
+                logging.info('this method had removed. see lsremote.py')
             elif msg['method'] == 15:
                 self.onClientUpdate(msg)
             elif msg['method'] == 16:
@@ -699,8 +641,6 @@ class lsminerClient(object):
                     logging.warning('server close socket. try to reconnect.')
                     time.sleep(1)
                     if not self.checkServerConnection():
-                        #subprocess.run('sudo systemctl restart miner', shell=True)
-                        #q.put(1)
                         self.sock = None
                     continue
 
@@ -718,15 +658,10 @@ class lsminerClient(object):
                 logging.info('recvThread exception. msg: ' + str(e))
                 logging.exception(e)
                 time.sleep(1)
-
-                #if not self.checkServerConnection():
-                #subprocess.run('sudo systemctl restart miner', shell=True)
-                #q.put(1)
                 self.sock = None
 
     '''cmd list: 1 == connect server, 2 == login server, 3 == get miner config'''
     def processCmd(self, cmd):
-        
         if cmd == 1:
             self.connectSrv()
         elif cmd == 2:
@@ -736,38 +671,9 @@ class lsminerClient(object):
         elif cmd == 6:
             self.sendLogoutReq()
         elif cmd == 14:
-            self.sendConsoleIdReq()
+            logging.info('this cmd had removed. see lsremote.py')
         else:
             logging.error('unknown cmd. cmd: ' + str(cmd))
-
-    def ttyshareProc(self):
-        filepath = "/home/lsminer/ttyshare.id"
-
-        #check ttyshare server connection ok? ok = True,
-        if not self.checkTTYServerConnection():
-            subprocess.run('sudo systemctl stop ttyshare', shell=True)
-            time.sleep(1)
-            subprocess.run('sudo systemctl start ttyshare', shell=True)
-
-        if not self.ttyservicestarting:
-            self.ttyservicestarting = 1
-            while True:
-                try:
-                    if not os.path.exists(filepath):
-                        logging.warning('can not find ttyshare.id file. sleep 10 seconds and try again.')
-                        time.sleep(10)
-                        continue
-                    time.sleep(2)
-                    with open(filepath, "r", encoding="utf-8") as fs:
-                        self.consoleurl = fs.readline().replace("\n","")
-                        logging.info("ttyshareurl: " + str(self.consoleurl))
-                    q.put(14)
-                    break
-                except Exception as e:
-                    logging.info('ttyshareProc exception. msg: ' + str(e))
-                    logging.exception(e)
-                    time.sleep(10)
-            self.ttyservicestarting = 0
 
     def init(self):
         self.cfg = loadCfg()
@@ -775,7 +681,6 @@ class lsminerClient(object):
         thread.start()
         
     def run(self):
-        #q.put(1)
         while True:
             try:
                 cmd = q.get()

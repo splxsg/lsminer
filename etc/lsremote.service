@@ -1,0 +1,13 @@
+[Unit]
+Description=Lsminer Remote Control Service
+After=lightdm.service
+
+[Service]
+User=lsminer
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/lsminer/lsminer/boot/lsremote start
+ExecStopPost=/home/lsminer/lsminer/boot/lsremote stop
+
+[Install]
+WantedBy=graphical.target

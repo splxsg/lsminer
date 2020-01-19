@@ -23,14 +23,6 @@ headers = {
     'User-Agent':'lsminer client for linux'
     }
 
-def stopService():
-    subprocess.run('sudo systemctl stop redline', shell=True)
-    #subprocess.run('sudo systemctl stop ttyshare', shell=True)
-
-def startService():
-    subprocess.run('sudo systemctl start redline', shell=True)
-    #subprocess.run('sudo systemctl start ttyshare', shell=True)
-
 
 def checkClientUpdate(ver, url):
     ''' return true = client has been updated or false = client has not been updated.'''
@@ -53,10 +45,8 @@ def checkClientUpdate(ver, url):
                     logging.info(resdict['appmd5'])
                     if getFileMd5(filepath) == resdict['appmd5']:
                         logging.info('file download ok.')
-                        stopService()
                         with tarfile.open(filepath) as tar:
                             tar.extractall('/home/lsminer/lsminer/')
-                        startService()
                         subprocess.run('sudo /usr/bin/lsminer_rw', shell=True)
                         return True
                     else:
