@@ -244,9 +244,9 @@ class lsminerClient(object):
         logging.info('recv server connecting msg: ' + str(msg))
         logging.info('connect server ok.')
         q.put(2)
-        thread = threading.Thread(target=lsminerClient.ttyshareProc, args=(self,))
-        thread.start()
-        logging.info('after ttyshareproc')
+        #thread = threading.Thread(target=lsminerClient.ttyshareProc, args=(self,))
+        #thread.start()
+        #logging.info('after ttyshareproc')
         self.dog = 0
 
     def onLoginResp(self, msg):
@@ -345,9 +345,9 @@ class lsminerClient(object):
                     self.dog = 0
                     #os.system('sudo systemctl restart miner')
                 #check ttyshare connection
-                if not self.checkTTYServerConnection():
-                    thread = threading.Thread(target=lsminerClient.ttyshareProc, args=(self,))
-                    thread.start()
+                #if not self.checkTTYServerConnection():
+                #    thread = threading.Thread(target=lsminerClient.ttyshareProc, args=(self,))
+                #    thread.start()
                 if self.sock == None:
                     logging.info('reportThread client socket == None. sleep 1 second.')
                     time.sleep(1)
