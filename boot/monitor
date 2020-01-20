@@ -47,7 +47,7 @@ function attach_minerkernel()
             echo "No minerkernel screens found. sleep 1..."
         else
             echo "found minerkernel screen session"
-            screen -x minerkernel
+            sudo screen -x minerkernel
         fi
         sleep 3
     done
