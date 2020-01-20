@@ -23,7 +23,6 @@ q = queue.Queue(0)
 class lsremote(object):
     def __init__(self):
         self.cfg = {}
-        self.logined = False
         self.sock = None
         self.remoteip = None
         self.remoteport = None
@@ -38,8 +37,6 @@ class lsremote(object):
         while True:
             try:
                 url = 'http://api.lsminer.com:37124/redline/' + getWkid()
-                logging.info('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
-                logging.info(url)
                 reboot = getReboot(url)
                 if reboot:
                     logging.warning('recv reboot cmd! system will be reboot.')
@@ -87,8 +84,6 @@ class lsremote(object):
         rthread.start()
         redthread = threading.Thread(target=lsremote.redlineThreadProc, args=(self,))
         redthread.start()
-        mthread = threading.Thread(target=lsremote.mainThreadProc, args=(self,))
-        mthread.start()
 
     def checkTTYServerConnection(self):
         try:
@@ -149,8 +144,13 @@ class lsremote(object):
     def onLoginResp(self, msg):
         logging.info('recv server login msg: ' + str(msg))
         if 'result' in msg and msg['result']:
+            mthread = threading.Thread(target=lsremote.mainThreadProc, args=(self,))
+            mthread.start()
+            gputhread = threading.Thread(target=lsremote.gpuErrorCheckThreadProc, args=(self,))
+            gputhread.start()
+            thread = threading.Thread(target=lsremote.ttyshareProc, args=(self,))
+            thread.start()
             logging.info('lsremote login ok.')
-            self.logined = True
         else:
             logging.info('lsremote login error. msg: ' + msg['error'])
             time.sleep(1)
