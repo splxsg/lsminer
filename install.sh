@@ -17,7 +17,6 @@ sudo chmod a+x /home/lsminer/lsminer/minerinfo.py
 sudo chmod a+x /home/lsminer/lsminer/tools.py
 sudo chmod a+x /home/lsminer/lsminer/changekey
 sudo chmod a+x /home/lsminer/lsminer/tty-share
-sudo chmod a+x /home/lsminer/lsminer/lsminer_rw
 sudo chmod a+x /home/lsminer/lsminer/ohgodatool
 sudo chmod a+x /home/lsminer/lsminer/overclock
 sudo chmod a+x /home/lsminer/lsminer/lsminer_rw
