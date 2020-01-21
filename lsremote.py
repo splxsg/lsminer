@@ -67,7 +67,7 @@ class lsremote(object):
             try:
                 with open("/var/log/syslog", "r", encoding="utf-8") as fs:
                     text = fs.readline()
-                    if text and 'amdgpu' in text and 'VM_CONTEXT1_PROTECTION_FAULT_ADDR' in text
+                    if text and 'amdgpu' in text and 'VM_CONTEXT1_PROTECTION_FAULT_ADDR' in text:
                         q.put({'cmd': 21, 'msg': '1'})
                         logging.info('found amdgpu error msg in syslog file. system will be reboot later.')
                         time.sleep(3)#wait, be sure reboot msg had sent to server
@@ -258,12 +258,12 @@ class lsremote(object):
             reqData['method'] = 1
 
             if self.cfg['wkid']:
-                reqData['wkid'] = self.cfg['wkid']
+                reqData['params'] = self.cfg['wkid']
             else:
-                reqData['wkid'] = getWkid()
+                reqData['params'] = getWkid()
 
-            reqData['appver'] = getClientVersion()
-            reqData['os'] = self.cfg['os']
+            #reqData['appver'] = getClientVersion()
+            #reqData['os'] = self.cfg['os']
             reqjson = json.dumps(reqData)
             reqjson += '\r\n'
             logging.info('lsremote send login request.')
@@ -338,7 +338,7 @@ class lsremote(object):
         while True:
             try:
                 cmdmsg = q.get()
-                self.processmsgMsg(cmdmsg)
+                self.processCmdMsg(cmdmsg)
             except Exception as e:
                 logging.info("main loop run exception. msg: " + str(e))
                 logging.exception(e)
@@ -346,6 +346,6 @@ class lsremote(object):
                 time.sleep(3)
 
 if __name__ == '__main__':
-    client = lsminerClient()
+    client = lsremote()
     client.init()
     client.run()

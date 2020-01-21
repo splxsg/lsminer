@@ -72,6 +72,9 @@ if __name__ == '__main__':
             if checkClientUpdate(appver, updateurl):
                 logging.info('client has been updated. lsminer client will restart later.')
                 subprocess.run('sudo systemctl restart miner', shell=True)
+            if not os.path.exists('/etc/systemd/system/lsremote.service'):            
+                    subprocess.run('sudo -H /home/lsminer/lsminer/install.sh', shell=True)
+                    subprocess.run('sudo systemctl restart lsremote', shell=True)
 
             process = subprocess.run('python3 /home/lsminer/lsminer/client.py', shell=True)
             if process.returncode == 123:
