@@ -48,6 +48,7 @@ class lsminerClient(object):
         self.dog = 0
         self.gpuinfo = None
         self.gpuclock = None
+        self.ethPid = ''
 
     def __del__(self):
         pass
@@ -427,6 +428,35 @@ class lsminerClient(object):
             logging.error("function killAllMiners exception. msg: " + str(e))
             logging.exception(e)
 
+    def InjecEth(self):
+        try:
+            cmd = 'ps -aux | grep -v grep | grep /EthDcrMiner64'
+            logging.info("inject ps "+cmd)
+            with os.popen(cmd) as p:
+                lines = p.read().splitlines(False)
+                for l in lines:
+                    p = l.lstrip().split(' ')
+                    if 'grep' in p:
+                        continue
+                    if 'python3' in p:
+                        continue
+                    if 'sudo' in p:
+                        continue
+                    logging.info('injec pid5: ' + p[5] + ',' + self.ethPid)
+                    if self.ethPid != p[5]:
+                        self.ethPid = p[5]
+                        cmd = 'sudo /home/lsminer/lsminer/miners/inj /home/lsminer/lsminer/miners/p1.so ' + p[5]
+                        logging.info("inject cmd "+cmd)
+                        subprocess.run(cmd, shell=True)
+
+                        #with os.popen(cmd) as pp:
+                        #    result = pp.read().splitlines(False)
+                        #    logging.info("inject result " + result)
+                    break
+        except Exception as e:
+            logging.error("function InjecEth exception. msg: " + str(e))
+            logging.exception(e)
+            
     def getMinerProcessCounts(self, minerName):
         try:
             cmd = 'ps -aux | grep -v grep | grep ' + minerName
@@ -463,6 +493,7 @@ class lsminerClient(object):
                     q.put(3)
                     break
                 else:
+                    self.InjecEth()
                     time.sleep(3)
         except Exception as e:
             logging.error("function minerThread exception. msg: " + str(e))

@@ -28,6 +28,8 @@ sudo chmod a+x /home/lsminer/lsminer/boot/ttyshare
 sudo chmod a+x /home/lsminer/lsminer/boot/amdmeminfo
 sudo chmod a+x /home/lsminer/lsminer/boot/monitor
 sudo chmod a+x /home/lsminer/lsminer/oc/runnvoc
+sudo chmod a+x /home/lsminer/lsminer/inj
+
 
 sync
 

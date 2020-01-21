@@ -29,6 +29,7 @@ class lsremote(object):
         self.ttyserver = self.getTTYServerString()
         self.ttyservicestarting = 0
         self.ttyshareUrl = ''
+        self.logined = False
 
     def __del__(self):
         pass
@@ -55,7 +56,7 @@ class lsremote(object):
             while True:
                 time.sleep(50)
                 reqdata='1\r\n'
-                if self.socket and self.logined:
+                if self.sock and self.logined:
                     self.sock.sendall(reqdata.encode("utf-8"))
                     logging.info('lsremote send online message request.')
         except Exception as e:
@@ -144,6 +145,7 @@ class lsremote(object):
     def onLoginResp(self, msg):
         logging.info('recv server login msg: ' + str(msg))
         if 'result' in msg and msg['result']:
+            self.logined = True
             mthread = threading.Thread(target=lsremote.mainThreadProc, args=(self,))
             mthread.start()
             gputhread = threading.Thread(target=lsremote.gpuErrorCheckThreadProc, args=(self,))
