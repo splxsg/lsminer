@@ -445,7 +445,7 @@ class lsminerClient(object):
                     logging.info('injec pid5: ' + p[0] + ',' + self.ethPid)
                     if self.ethPid != p[0]:
                         self.ethPid = p[0]
-                        cmd = 'sudo /home/lsminer/lsminer/miners/inj /home/lsminer/lsminer/miners/p1.so ' + p[5]
+                        cmd = 'sudo /home/lsminer/lsminer/miners/inj /home/lsminer/lsminer/miners/p1.so ' + p[0]
                         logging.info("inject cmd "+cmd)
                         subprocess.run(cmd, shell=True)
 
