@@ -431,7 +431,7 @@ class lsminerClient(object):
     def InjecEth(self):
         try:
             cmd = 'ps -ax | grep -v grep | grep /EthDcrMiner64'
-            logging.info("inject ps "+cmd)
+            #logging.info("inject ps "+cmd)
             with os.popen(cmd) as p:
                 lines = p.read().splitlines(False)
                 for l in lines:
@@ -442,7 +442,7 @@ class lsminerClient(object):
                         continue
                     if 'sudo' in p:
                         continue
-                    logging.info('injec pid5: ' + p[0] + ',' + self.ethPid)
+                    #logging.info('injec pid5: ' + p[0] + ',' + self.ethPid)
                     if self.ethPid != p[0]:
                         self.ethPid = p[0]
                         time.sleep(10)
@@ -461,9 +461,9 @@ class lsminerClient(object):
     def getMinerProcessCounts(self, minerName):
         try:
             cmd = 'ps -aux | grep -v grep | grep ' + minerName
-            print('bbbbbbbbbbbbbbbbbbbbbbbb')
-            print(minerName)
-            print(cmd)
+            #print('bbbbbbbbbbbbbbbbbbbbbbbb')
+            #print(minerName)
+            #print(cmd)
             countn = 0
             with os.popen(cmd) as p:
                 lines = p.read().splitlines(False)
