@@ -43,7 +43,7 @@ sudo cp -f /home/lsminer/lsminer/etc/miner.service /etc/systemd/system/miner.ser
 sudo cp -f /home/lsminer/lsminer/etc/lsremote.service /etc/systemd/system/lsremote.service
 sudo cp -f /home/lsminer/lsminer/etc/ttyshare.service /etc/systemd/system/ttyshare.service
 sudo cp -f /home/lsminer/lsminer/etc/screenrc /etc/screenrc
-sudo cp -f /home/lsminer/lsminer/etc/lsminer.conf /home/lsminer/lsminer.conf
+[ -f /home/lsminer/lsminer.conf ] && echo "lsminer.conf exist" || sudo cp -f /home/lsminer/lsminer/etc/lsminer.conf /home/lsminer/lsminer.conf
 ln -s /home/lsminer/lsminer/oc/runnvoc /usr/bin/runnvoc
 ln -s /home/lsminer/lsminer/lsminer_rw /usr/bin/lsminer_rw
 
