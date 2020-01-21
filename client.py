@@ -618,7 +618,7 @@ class lsminerClient(object):
         #overclock get over clocl args by environment variables
         #os.system('/home/lsminer/lsminer/overclock')
         
-        with os.popen('sudo /home/lsminer/lsminer/overclock') as p:
+        with os.popen('/home/lsminer/lsminer/overclock') as p:
             netlines = p.read().splitlines(False)
             logging.info(netlines)
         
