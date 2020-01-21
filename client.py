@@ -460,10 +460,24 @@ class lsminerClient(object):
             
     def getMinerProcessCounts(self, minerName):
         try:
-            cmd = 'ps -aux | grep -v grep | grep ' + minerName
+            countn = 0
+            cmd = 'ps -ax | grep -v grep | grep ' + minerName
             with os.popen(cmd) as p:
                 lines = p.read().splitlines(False)
-                return len(lines)
+                for l in lines:
+                    p = l.lstrip().split(' ')
+                    if 'grep' in p:
+                        continue
+                    if 'python3' in p:
+                        continue
+                    if 'sudo' in p:
+                        continue
+                    countn = countn + 1
+            return countn         
+            #cmd = 'ps -aux | grep -v grep | grep ' + minerName
+           """  with os.popen(cmd) as p:
+                lines = p.read().splitlines(False)
+                return len(lines) """
         except Exception as e:
                 logging.error("function getMinerProcessCounts exception. msg: " + str(e))
                 logging.exception(e)
