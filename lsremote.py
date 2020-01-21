@@ -67,7 +67,7 @@ class lsremote(object):
             try:
                 with open("/var/log/syslog", "r", encoding="utf-8") as fs:
                     text = fs.readline()
-                    if text and 'amdgpu' in text and 'VM_CONTEXT1_PROTECTION_FAULT_ADDR' in text;
+                    if text and 'amdgpu' in text and 'VM_CONTEXT1_PROTECTION_FAULT_ADDR' in text
                         q.put({'cmd': 21, 'msg': '1'})
                         logging.info('found amdgpu error msg in syslog file. system will be reboot later.')
                         time.sleep(3)#wait, be sure reboot msg had sent to server
