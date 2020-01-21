@@ -462,7 +462,9 @@ class lsminerClient(object):
         try:
             cmd = 'ps -aux | grep -v grep | grep ' + minerName
             print('bbbbbbbbbbbbbbbbbbbbbbbb')
+            print(minerName)
             print(cmd)
+            countn = 0
             with os.popen(cmd) as p:
                 lines = p.read().splitlines(False)
                 for l in lines:
@@ -492,18 +494,20 @@ class lsminerClient(object):
             cmdtmp = Template('screen -dm -S minerkernel -t minerkernel -L bash -c "python3 /home/lsminer/lsminer/kernel.py ${arg}"')
             cmd = cmdtmp.substitute(arg=arg)
             subprocess.run(cmd, shell=True)
-
+            time.sleep(3)
             self.minerstatus = 1
 
             #update miner time
             self.minertime = datetime.now()
             while True:
-                minerProcount = self.getMinerProcessCounts(self.minerpath[2:])
+                s = self.minerpath.split('/')[-1:]
+                minerProcount = self.getMinerProcessCounts(s[0])
                 logging.info("miner count: "+str(minerProcount))
                 if minerProcount == 0:
                     self.minerstatus = 0
                     logging.info('miner terminated. client will be getMinerargs and restart.')
                     q.put(3)
+
                     break
                 else:
                     self.InjecEth()
