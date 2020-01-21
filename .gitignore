@@ -1,5 +1,4 @@
 .vscode/*
 *.pyc
 *.o
-miners/*
 __pycache__/*
