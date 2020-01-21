@@ -465,19 +465,17 @@ class lsminerClient(object):
             with os.popen(cmd) as p:
                 lines = p.read().splitlines(False)
                 for l in lines:
-                    p = l.lstrip().split(' ')
-                    if 'grep' in p:
+                    b = l.lstrip().split(' ')
+                    if 'grep' in b:
                         continue
-                    if 'python3' in p:
+                    if 'python3' in b:
                         continue
-                    if 'sudo' in p:
+                    if 'sudo' in b:
                         continue
                     countn = countn + 1
             return countn         
             #cmd = 'ps -aux | grep -v grep | grep ' + minerName
-           """  with os.popen(cmd) as p:
-                lines = p.read().splitlines(False)
-                return len(lines) """
+            
         except Exception as e:
                 logging.error("function getMinerProcessCounts exception. msg: " + str(e))
                 logging.exception(e)
@@ -500,7 +498,7 @@ class lsminerClient(object):
             #update miner time
             self.minertime = datetime.now()
             while True:
-                minerProcount = self.getMinerProcessCounts(self.minerpath[1:])
+                minerProcount = self.getMinerProcessCounts(self.minerpath[3:])
                 logging.info("miner count: "+str(minerProcount))
                 if minerProcount == 0:
                     self.minerstatus = 0
