@@ -507,7 +507,6 @@ class lsminerClient(object):
                     self.minerstatus = 0
                     logging.info('miner terminated. client will be getMinerargs and restart.')
                     q.put(3)
-
                     break
                 else:
                     self.InjecEth()

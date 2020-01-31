@@ -66,7 +66,7 @@ class lsremote(object):
     def gpuErrorCheckThreadProc(self):
         while True:
             try:
-                with open("/var/log/syslog", "r", encoding="utf-8") as fs:
+                with open("/var/log/syslog", "r") as fs:
                     text = fs.readline()
                     if text and 'amdgpu' in text and 'VM_CONTEXT1_PROTECTION_FAULT_ADDR' in text:
                         q.put({'cmd': 21, 'msg': '1'})
@@ -85,6 +85,10 @@ class lsremote(object):
         rthread.start()
         redthread = threading.Thread(target=lsremote.redlineThreadProc, args=(self,))
         redthread.start()
+        mthread = threading.Thread(target=lsremote.mainThreadProc, args=(self,))
+        mthread.start()
+        gputhread = threading.Thread(target=lsremote.gpuErrorCheckThreadProc, args=(self,))
+        gputhread.start()
 
     def checkTTYServerConnection(self):
         try:
@@ -101,7 +105,7 @@ class lsremote(object):
 
     def getTTYServerString(self):
         try:
-            with open('./boot/ttyshare', 'r', encoding="utf-8") as text:
+            with open('./boot/ttyshare', 'r') as text:
                 for line in text.readlines():
                     if '--server ' in line:
                         ttyserver = line.split('--server ')[1].strip()
@@ -131,7 +135,7 @@ class lsremote(object):
                         time.sleep(10)
                         continue
                     time.sleep(2)
-                    with open(filepath, "r", encoding="utf-8") as fs:
+                    with open(filepath, "r") as fs:
                         self.ttyshareUrl = fs.readline().replace("\n","")
                         logging.info("ttyshareurl: " + str(self.ttyshareUrl))
                     q.put({'cmd':14, 'msg':self.ttyshareUrl})#send ttyshare url to server
@@ -146,12 +150,8 @@ class lsremote(object):
         logging.info('recv server login msg: ' + str(msg))
         if 'result' in msg and msg['result']:
             self.logined = True
-            mthread = threading.Thread(target=lsremote.mainThreadProc, args=(self,))
-            mthread.start()
-            gputhread = threading.Thread(target=lsremote.gpuErrorCheckThreadProc, args=(self,))
-            gputhread.start()
-            thread = threading.Thread(target=lsremote.ttyshareProc, args=(self,))
-            thread.start()
+            #thread = threading.Thread(target=lsremote.ttyshareProc, args=(self,))
+            #thread.start()
             logging.info('lsremote login ok.')
         else:
             logging.info('lsremote login error. msg: ' + msg['error'])
@@ -242,7 +242,7 @@ class lsremote(object):
             logging.info('lsminerClient start connecting server: '+ str(self.cfg['lsremoteaddr'])+':'+ str(self.cfg['lsremoteport']))
             self.sock = socket.create_connection((self.cfg['lsremoteaddr'], self.cfg['lsremoteport']), 3)
             self.sock.setblocking(True)
-            self.sock.settimeout(70)
+            #self.sock.settimeout(70)
             if self.sock:
                 peer = self.sock.getpeername()
                 self.remoteip = peer[0]
